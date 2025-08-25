@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>JWT 토큰 인증 테스트</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    .container { max-width: 800px; margin: auto; }
+    input { width: 200px; padding: 5px; margin-right: 10px; }
+    button { padding: 5px 10px; margin: 5px; cursor: pointer; }
+    #result {
+      margin-top: 20px;
+      padding: 10px;
+      border: 1px solid #ccc;
+      background-color: #f0f0f0;
+      white-space: pre-wrap; /* 줄바꿈과 공백을 그대로 표시 */
+      word-wrap: break-word;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>프론트엔드 JWT 테스트</h1>
+
+  <div id="localAuthForm">
+    <input type="text" id="username" placeholder="사용자 이름">
+    <input type="password" id="password" placeholder="비밀번호">
+    <input type="email" id="email" placeholder="사용자 이메일">
+  </div>
+  <div id="localAuthButtons">
+    <button id="signupButton">회원가입 (user)</button>
+    <button id="loginButton">로그인</button>
+    <a href="/oauth2/authorization/google"><button type="button">구글로 로그인</button></a>
+  </div>
+
+  <hr>
+
+  <div id="oauthSignupForm" style="display: none;">
+    <h3>추가 정보 입력</h3>
+    <p>Google 계정으로 첫 로그인하셨습니다. 서비스에서 사용할 아이디를 입력해주세요.</p>
+    <input type="text" id="oauthUsername" placeholder="사용할 아이디 입력">
+    <button id="oauthSignupButton">가입 완료</button>
+  </div>
+
+  <div>
+    <button id="memberDataButton">멤버 데이터 요청</button>
+    <button id="adminDataButton">관리자 데이터 요청</button>
+    <button id="logoutButton">로그아웃</button>
+  </div>
+
+  <h3>API 요청 결과 및 로그:</h3>
+  <pre id="result">여기에 결과가 표시됩니다.</pre>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>

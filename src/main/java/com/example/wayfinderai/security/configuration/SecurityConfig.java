@@ -1,0 +1,106 @@
+package com.example.wayfinderai.security.configuration;
+
+
+import com.example.wayfinderai.security.JwtAuthenticationFilter;
+import com.example.wayfinderai.security.UserDetailsServiceImpl;
+import com.example.wayfinderai.utils.JwtUtil;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
+import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.authentication.logout.LogoutHandler;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import java.util.Arrays;
+
+@Configuration
+@EnableWebSecurity
+@RequiredArgsConstructor
+public class SecurityConfig {
+
+    private final JwtUtil jwtUtil;
+    private final UserDetailsServiceImpl userDetailsService;
+    private final AuthenticationSuccessHandler oAuth2LoginSuccessHandler;
+    private final LogoutHandler customLogoutHandler;
+
+
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        // CSRF, Form Login, HTTP Basic 비활성화
+        http.csrf(AbstractHttpConfigurer::disable)
+                .formLogin(AbstractHttpConfigurer::disable)
+                .httpBasic(AbstractHttpConfigurer::disable);
+
+        http.cors(cors -> cors.configurationSource(corsConfigurationSource()));
+
+        // 세션 관리 STATELESS로 설정
+        http.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+
+        // 인가 규칙 설정
+        http.authorizeHttpRequests(auth -> auth
+                .requestMatchers("/api/auth/**").permitAll() // 회원가입, 로그인 등은 허용
+                .requestMatchers("/api/admin/**").hasRole("ADMIN") // /api/admin/** 은 ADMIN만
+                .requestMatchers("/", "/index.html", "/script.js").permitAll() // 프론트엔드 리소스 접근 허용
+                .anyRequest().authenticated() // 나머지 요청은 인증 필요
+        );
+
+        // OAuth2 로그인 설정 추가
+        http.oauth2Login(oauth2 -> oauth2
+                .successHandler(oAuth2LoginSuccessHandler) // 로그인 성공 시 핸들러 사용
+        );
+
+        // ✨ 1. Spring Security의 내장 로그아웃 설정을 추가합니다.
+        http.logout(logout -> logout
+                .logoutUrl("/api/auth/logout") // 로그아웃을 처리할 URL을 지정합니다.
+                .addLogoutHandler(customLogoutHandler)
+                .logoutSuccessHandler((request, response, authentication) -> {
+                    // 로그아웃 성공 시 별도의 리디렉션 없이 성공 상태 코드(200 OK)만 반환합니다.
+                    response.setStatus(HttpServletResponse.SC_OK);
+                })
+                .deleteCookies(JwtUtil.REFRESH_TOKEN_HEADER) // 로그아웃 시 RefreshToken 쿠키를 삭제합니다.
+        );
+
+        // JWT 필터 추가
+        http.addFilterBefore(new JwtAuthenticationFilter(jwtUtil, userDetailsService), UsernamePasswordAuthenticationFilter.class);
+
+        return http.build();
+    }
+
+    // ✨ 1. CORS 설정을 위한 Bean을 추가합니다.
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        // 프론트엔드 주소를 허용합니다.
+        configuration.setAllowedOrigins(Arrays.asList("http://localhost:8080"));
+        // 허용할 HTTP 메서드를 설정합니다.
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        // 허용할 헤더를 설정합니다.
+        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));
+        // 자격 증명(쿠키 등)을 허용합니다.
+        configuration.setAllowCredentials(true);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        // 모든 경로에 대해 위 설정 Dto 적용합니다.
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
+    }
+
+
+}
