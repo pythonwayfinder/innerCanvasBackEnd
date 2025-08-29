@@ -1,16 +1,11 @@
 package com.example.wayfinderai.service;
 
-
-import com.example.wayfinderai.DTOs.LoginRequestDto;
-import com.example.wayfinderai.DTOs.OAuthSignupRequestDto;
-import com.example.wayfinderai.DTOs.SignupRequestDto;
-import com.example.wayfinderai.DTOs.TokenDto;
+import com.example.wayfinderai.DTOs.*;
 import com.example.wayfinderai.entity.Member;
 import com.example.wayfinderai.entity.MemberRoleEnum;
 import com.example.wayfinderai.repository.MemberRepository;
 import com.example.wayfinderai.security.service.RefreshTokenService;
 import com.example.wayfinderai.utils.JwtUtil;
-import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -19,6 +14,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDate;
+import java.time.Period;
 
 @Service
 @RequiredArgsConstructor
@@ -46,18 +44,22 @@ public class MemberService {
             throw new IllegalArgumentException("이미 존재하는 이메일입니다.");
         }
 
+        LocalDate birthDate = LocalDate.parse(requestDto.getBirthDate());
+        int age = Period.between(birthDate, LocalDate.now()).getYears();
+
         Member member = Member.builder()
                 .username(username)
                 .password(password)
                 .email(email)
                 .role(role)
                 .provider("local") // 일반 회원가입은 "local"로 저장
+                .age(age) // ✨ 계산된 나이 저장
                 .build();
         memberRepository.save(member);
     }
 
     @Transactional
-    public TokenDto login(LoginRequestDto requestDto, HttpServletResponse response) {
+    public LoginResponseDto login(LoginRequestDto requestDto, HttpServletResponse response) {
         Member member = memberRepository.findByUsername(requestDto.getUsername()).orElseThrow(
                 () -> new IllegalArgumentException("등록된 사용자가 없습니다.")
         );
@@ -68,7 +70,6 @@ public class MemberService {
         String accessToken = jwtUtil.createAccessToken(member.getUsername(), member.getRole());
         String refreshToken = jwtUtil.createRefreshToken(member.getUsername(), member.getRole());
 
-        // 🔄 변경 후: substring(7)을 사용하여 "Bearer "를 제거하고 저장합니다.
         refreshTokenService.saveRefreshToken(member.getUsername(), refreshToken.substring(7));
 
         // Refresh Token을 HttpOnly 쿠키에 담아 응답
@@ -79,12 +80,16 @@ public class MemberService {
         refreshTokenCookie.setMaxAge((int) (refreshTokenExpiration / 1000));
         response.addCookie(refreshTokenCookie);
 
-        // Access Token만 DTO에 담아 반환
-        return new TokenDto(accessToken, null);
+        // ✨ Member Entity를 UserDto로 변환
+        UserDto userDto = new UserDto(member);
+
+        // ✨ AccessToken과 UserDto를 함께 담아 반환
+        return new LoginResponseDto(accessToken, userDto);
     }
 
     @Transactional
     public TokenDto reissue(HttpServletRequest request, HttpServletResponse response) {
+        System.out.println("refreshToken 재발급");
         String refreshToken = jwtUtil.getRefreshTokenFromCookie(request);
 
         // 🔄 변경 전: if (refreshToken == null || !jwtUtil.validateToken("Bearer " + refreshToken))
@@ -118,16 +123,7 @@ public class MemberService {
     }
 
     @Transactional
-    public TokenDto oauthSignup(OAuthSignupRequestDto requestDto, HttpServletResponse response) {
-        // 🔄 수정: JWT 임시 토큰 검증 및 파싱
-        String tempToken = requestDto.getTempToken();
-        if (!jwtUtil.validateToken(tempToken)) {
-            throw new IllegalArgumentException("유효하지 않은 임시 토큰입니다.");
-        }
-
-        Claims claims = jwtUtil.getUserInfoFromToken(tempToken);
-        String email = claims.get("email", String.class);
-        String provider = claims.get("provider", String.class);
+    public LoginResponseDto oauthSignup(OAuthSignupRequestDto requestDto, String email, String provider, HttpServletResponse response) {
         String username = requestDto.getUsername();
 
         // 2. username 또는 email 중복 확인
@@ -156,6 +152,23 @@ public class MemberService {
         // (addRefreshTokenToCookie 메서드를 외부에 만들거나 MemberService 내에 구현하여 사용)
         // addRefreshTokenToCookie(response, refreshToken);
 
-        return new TokenDto(accessToken, null);
+        // ✨ Member Entity를 UserDto로 변환
+        UserDto userDto = new UserDto(newMember);
+
+        // ✨ AccessToken과 UserDto를 함께 담아 반환
+        return new LoginResponseDto(accessToken, userDto);
+    }
+
+    @Transactional
+    public UserDto getUserInfo(String username) {
+        Member member = memberRepository.findByUsername(username).orElseThrow(
+                () -> new IllegalArgumentException("해당 유저가 없습니다.")
+        );
+        return new UserDto(member);
+    }
+
+    @Transactional
+    public boolean checkUsernameAvailability(String username) {
+        return !memberRepository.findByUsername(username).isPresent();
     }
 }

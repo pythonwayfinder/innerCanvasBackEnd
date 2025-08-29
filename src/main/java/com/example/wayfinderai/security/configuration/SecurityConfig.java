@@ -55,10 +55,14 @@ public class SecurityConfig {
 
         // 인가 규칙 설정
         http.authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**").permitAll() // 회원가입, 로그인 등은 허용
-                .requestMatchers("/api/admin/**").hasRole("ADMIN") // /api/admin/** 은 ADMIN만
-                .requestMatchers("/", "/index.html", "/script.js").permitAll() // 프론트엔드 리소스 접근 허용
-                .anyRequest().authenticated() // 나머지 요청은 인증 필요
+                // ✨ 1. 더 구체적인 규칙을 먼저 작성합니다.
+                .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                .requestMatchers("/api/auth/me").authenticated() // '/api/auth/me'는 반드시 인증이 필요함
+
+                // ✨ 2. 그 외 더 넓은 범위의 규칙을 나중에 작성합니다.
+                .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers("/", "/index.html", "/script.js", "/main/**").permitAll()
+                .anyRequest().authenticated()
         );
 
         // OAuth2 로그인 설정 추가
@@ -88,7 +92,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         // 프론트엔드 주소를 허용합니다.
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:8080", "http://localhost:3000"));
+        configuration.setAllowedOrigins(Arrays.asList("http://localhost:8080", "http://localhost:5173"));
         // 허용할 HTTP 메서드를 설정합니다.
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         // 허용할 헤더를 설정합니다.
