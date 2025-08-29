@@ -55,6 +55,7 @@ public class MemberService {
                 .provider("local") // 일반 회원가입은 "local"로 저장
                 .age(age) // ✨ 계산된 나이 저장
                 .build();
+
         memberRepository.save(member);
     }
 
@@ -134,12 +135,16 @@ public class MemberService {
             throw new IllegalArgumentException("이미 가입된 이메일입니다.");
         }
 
+        LocalDate birthDate = LocalDate.parse(requestDto.getBirthDate());
+        int age = Period.between(birthDate, LocalDate.now()).getYears();
+
         // 3. 사용자 정보로 최종 회원가입
         Member newMember = Member.builder()
                 .username(username)
                 .email(email)
                 .password(passwordEncoder.encode("OAUTH_USER_PASSWORD")) // 소셜 로그인 유저는 실제 비밀번호가 없으므로 임의의 값 저장
                 .role(MemberRoleEnum.USER)
+                .age(age)
                 .provider(provider)
                 .build();
         memberRepository.save(newMember);
