@@ -9,6 +9,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -60,13 +61,20 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
             response.sendRedirect(redirectUrl);
 
         } else {
-            // 신규 사용자인 경우, 추가 정보 입력을 위해 임시 토큰 발급 후 리디렉션
-            log.info("신규 사용자입니다. 추가 정보 입력 페이지로 리디렉션합니다.");
+            // 신규 사용자인 경우
+            log.info("신규 사용자입니다. 서버 세션에 임시 정보를 저장하고 추가 정보 페이지로 리디렉션합니다.");
 
-            // 🔄 수정: 단순 문자열 대신 JWT 임시 토큰 생성
-            String tempToken = jwtUtil.createTempToken(email, provider);
+            // ✨ 1. HttpSession을 가져옵니다.
+            HttpSession session = request.getSession();
 
-            String redirectUrl = "http://localhost:8080/?tempToken=" + tempToken;
+            // ✨ 2. 세션에 이메일과 프로바이더 정보를 저장합니다. (유효시간 5분 설정)
+            session.setAttribute("oauth_email", email);
+            session.setAttribute("oauth_provider", provider);
+            session.setMaxInactiveInterval(300); // 초 단위 (5분)
+
+            // ✨ 3. 이제 토큰 없이 프론트엔드의 특정 경로로 리디렉션합니다.
+            // 프론트엔드는 이 경로를 보고 추가 정보 입력 폼을 보여주도록 약속합니다.
+            String redirectUrl = "http://localhost:3000/signup/oauth"; // 프론트엔드 리액트 주소로 변경
             response.sendRedirect(redirectUrl);
         }
     }

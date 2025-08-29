@@ -31,16 +31,20 @@ public class Member {
     @Enumerated(value = EnumType.STRING)
     private MemberRoleEnum role;
 
+    @Column(nullable = false)
+    private int age; // ✨ 나이 필드 추가
+
     // 어느 소셜 로그인을 통해 가입했는지 확인 (예: "google", "local")
     @Column
     private String provider;
 
     @Builder
-    public Member(String username, String password, String email, MemberRoleEnum role, String provider) {
+    public Member(String username, String password, String email, MemberRoleEnum role, String provider, Integer age) {
         this.username = username;
         this.password = password;
         this.email = email;
         this.role = role;
         this.provider = provider;
+        this.age = age;
     }
 }

@@ -1,15 +1,15 @@
 package com.example.wayfinderai.controller;
 
 
-import com.example.wayfinderai.DTOs.LoginRequestDto;
-import com.example.wayfinderai.DTOs.OAuthSignupRequestDto;
-import com.example.wayfinderai.DTOs.SignupRequestDto;
-import com.example.wayfinderai.DTOs.TokenDto;
+import com.example.wayfinderai.DTOs.*;
 import com.example.wayfinderai.service.MemberService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -26,8 +26,8 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<TokenDto> login(@RequestBody LoginRequestDto loginRequestDto, HttpServletResponse response) {
-        // Service에서 반환된 TokenDto는 Access Token만 담고 있음
+    // 🔄 반환 타입을 ResponseEntity<TokenDto>에서 ResponseEntity<LoginResponseDto>로 변경
+    public ResponseEntity<LoginResponseDto> login(@RequestBody LoginRequestDto loginRequestDto, HttpServletResponse response) {
         return ResponseEntity.ok(memberService.login(loginRequestDto, response));
     }
 
@@ -37,7 +37,35 @@ public class AuthController {
     }
 
     @PostMapping("/oauth-signup")
-    public ResponseEntity<TokenDto> oauthSignup(@RequestBody OAuthSignupRequestDto requestDto, HttpServletResponse response) {
-        return ResponseEntity.ok(memberService.oauthSignup(requestDto, response));
+    public ResponseEntity<LoginResponseDto> oauthSignup(@RequestBody OAuthSignupRequestDto requestDto, HttpSession session, HttpServletResponse response) {
+
+        String email = (String) session.getAttribute("oauth_email");
+        String provider = (String) session.getAttribute("oauth_provider");
+
+        if (email == null || provider == null) {
+            throw new IllegalArgumentException("세션 정보가 유효하지 않습니다.");
+        }
+
+        // 세션에서 꺼낸 정보와 DTO를 서비스로 전달
+        LoginResponseDto loginResponse = memberService.oauthSignup(requestDto, email, provider, response);
+
+        // 사용이 끝난 세션 정보는 삭제
+        session.removeAttribute("oauth_email");
+        session.removeAttribute("oauth_provider");
+
+        return ResponseEntity.ok(loginResponse);
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<UserDto> getMyInfo(@AuthenticationPrincipal UserDetails userDetails) {
+        System.out.println("/me 들어왔음");
+        String username = userDetails.getUsername();
+        UserDto userInfo = memberService.getUserInfo(username);
+        return ResponseEntity.ok(userInfo);
+    }
+
+    @GetMapping("/check-username")
+    public ResponseEntity<Boolean> checkUsername(@RequestParam String username) {
+        return ResponseEntity.ok(memberService.checkUsernameAvailability(username));
     }
 }
