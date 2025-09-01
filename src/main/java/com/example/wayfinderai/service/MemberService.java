@@ -226,4 +226,13 @@ public class MemberService {
         member.setPassword(passwordEncoder.encode(dto.getNewPassword()));
         memberRepository.save(member);
     }
+
+    public Boolean checkPassword(LoginRequestDto requestDto, HttpServletResponse response) {
+        System.out.println("checkPassword: " + requestDto.getPassword());
+        Member member = memberRepository.findByUsername(requestDto.getUsername()).orElseThrow(
+                () -> new IllegalArgumentException("등록된 사용자가 없습니다.")
+        );
+        System.out.println("12312312312312312321323" + member);
+        return passwordEncoder.matches(requestDto.getPassword(), member.getPassword());
+    }
 }

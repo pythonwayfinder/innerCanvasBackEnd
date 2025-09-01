@@ -1,9 +1,11 @@
 package com.example.wayfinderai.controller;
 
 import com.example.wayfinderai.DTOs.ChangePasswordRequestDto;
+import com.example.wayfinderai.DTOs.LoginRequestDto;
 import com.example.wayfinderai.DTOs.UpdateProfileRequestDto;
 import com.example.wayfinderai.DTOs.UserDto;
 import com.example.wayfinderai.service.MemberService;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -37,5 +39,10 @@ public class UsersController {
         String username = userDetails.getUsername();
         memberService.changeMyPassword(username, request);
         return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/pass")
+    public ResponseEntity<Boolean> changePass(@RequestBody LoginRequestDto loginRequestDto, HttpServletResponse response) {
+        return ResponseEntity.ok(memberService.checkPassword(loginRequestDto, response));
     }
 }

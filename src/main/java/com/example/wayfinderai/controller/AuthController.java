@@ -59,7 +59,6 @@ public class AuthController {
 
     @GetMapping("/me")
     public ResponseEntity<UserDto> getMyInfo(@AuthenticationPrincipal UserDetails userDetails) {
-        System.out.println("/me 들어왔음");
         String username = userDetails.getUsername();
         UserDto userInfo = memberService.getUserInfo(username);
         return ResponseEntity.ok(userInfo);
