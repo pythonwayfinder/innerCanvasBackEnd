@@ -9,10 +9,12 @@ public class UserDto {
     private String username;
     private String email;
     private MemberRoleEnum role;
+    private Integer age;
 
     public UserDto(Member member) {
         this.username = member.getUsername();
         this.email = member.getEmail();
         this.role = member.getRole();
+        this.age = member.getAge();
     }
 }

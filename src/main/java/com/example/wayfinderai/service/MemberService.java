@@ -64,6 +64,7 @@ public class MemberService {
         Member member = memberRepository.findByUsername(requestDto.getUsername()).orElseThrow(
                 () -> new IllegalArgumentException("등록된 사용자가 없습니다.")
         );
+        System.out.println("12312312312312312321323" + member);
         if (!passwordEncoder.matches(requestDto.getPassword(), member.getPassword())) {
             throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
         }
@@ -175,5 +176,54 @@ public class MemberService {
     @Transactional
     public boolean checkUsernameAvailability(String username) {
         return !memberRepository.findByUsername(username).isPresent();
+    }
+
+    @Transactional
+    public UserDto updateMyProfile(String username, UpdateProfileRequestDto dto) {
+        Member member = memberRepository.findByUsername(username)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+
+        // 이메일 변경 (null/blank면 무시)
+        if (dto.getEmail() != null && !dto.getEmail().isBlank()) {
+            member.setEmail(dto.getEmail().trim());
+        }
+
+        // 생년월일이 전달되면 → age 재계산 후 저장 (DB에는 age만 저장)
+        if (dto.getBirthDate() != null && !dto.getBirthDate().isBlank()) {
+            LocalDate birth = LocalDate.parse(dto.getBirthDate()); // "YYYY-MM-DD"
+            int age = Period.between(birth, LocalDate.now()).getYears();
+            member.setAge(age);
+        }
+
+        // 변경사항 저장
+        memberRepository.save(member);
+
+        // 최신 상태 반환
+        return new UserDto(member);
+    }
+
+    @Transactional
+    public void changeMyPassword(String username, ChangePasswordRequestDto dto) {
+        Member member = memberRepository.findByUsername(username)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+
+        // 현재 비밀번호 검증
+        if (member.getPassword() == null || !passwordEncoder.matches(dto.getCurrentPassword(), member.getPassword())) {
+            throw new IllegalArgumentException("현재 비밀번호가 일치하지 않습니다.");
+        }
+
+        // 새 비밀번호 확인 일치 검증
+        if (!dto.getNewPassword().equals(dto.getConfirmPassword())) {
+            throw new IllegalArgumentException("새 비밀번호와 확인이 일치하지 않습니다.");
+        }
+
+        // 기존과 동일 비밀번호 방지(선택)
+        if (passwordEncoder.matches(dto.getNewPassword(), member.getPassword())) {
+            throw new IllegalArgumentException("기존 비밀번호와 동일합니다.");
+        }
+
+        // 비밀번호 변경
+        member.setPassword(passwordEncoder.encode(dto.getNewPassword()));
+        memberRepository.save(member);
     }
 }

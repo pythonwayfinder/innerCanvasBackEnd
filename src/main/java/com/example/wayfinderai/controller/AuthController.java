@@ -28,6 +28,7 @@ public class AuthController {
     @PostMapping("/login")
     // 🔄 반환 타입을 ResponseEntity<TokenDto>에서 ResponseEntity<LoginResponseDto>로 변경
     public ResponseEntity<LoginResponseDto> login(@RequestBody LoginRequestDto loginRequestDto, HttpServletResponse response) {
+        System.out.println(response.toString());
         return ResponseEntity.ok(memberService.login(loginRequestDto, response));
     }
 
