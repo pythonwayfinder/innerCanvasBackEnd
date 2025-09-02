@@ -54,6 +54,7 @@ public class MemberService {
                 .role(role)
                 .provider("local") // 일반 회원가입은 "local"로 저장
                 .age(age) // ✨ 계산된 나이 저장
+                .birthDate(birthDate)
                 .build();
 
         memberRepository.save(member);
@@ -147,6 +148,7 @@ public class MemberService {
                 .role(MemberRoleEnum.USER)
                 .age(age)
                 .provider(provider)
+                .birthDate(birthDate)
                 .build();
         memberRepository.save(newMember);
 
@@ -188,13 +190,12 @@ public class MemberService {
             member.setEmail(dto.getEmail().trim());
         }
 
-        // 생년월일이 전달되면 → age 재계산 후 저장 (DB에는 age만 저장)
         if (dto.getBirthDate() != null && !dto.getBirthDate().isBlank()) {
             LocalDate birth = LocalDate.parse(dto.getBirthDate()); // "YYYY-MM-DD"
             int age = Period.between(birth, LocalDate.now()).getYears();
+            member.setBirthDate(birth);     // ✅ 누락되어 있던 부분 추가
             member.setAge(age);
         }
-
         // 변경사항 저장
         memberRepository.save(member);
 

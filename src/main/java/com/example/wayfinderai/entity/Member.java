@@ -3,6 +3,8 @@ package com.example.wayfinderai.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDate;
+
 @Entity
 @Data
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -34,17 +36,21 @@ public class Member {
     @Column(nullable = false)
     private int age; // ✨ 나이 필드 추가
 
+    @Column(name = "birth_day_date")
+    private LocalDate birthDate;
+
     // 어느 소셜 로그인을 통해 가입했는지 확인 (예: "google", "local")
     @Column
     private String provider;
 
     @Builder
-    public Member(String username, String password, String email, MemberRoleEnum role, String provider, Integer age) {
+    public Member(String username, String password, String email, MemberRoleEnum role, String provider, Integer age, LocalDate birthDate) {
         this.username = username;
         this.password = password;
         this.email = email;
         this.role = role;
         this.provider = provider;
         this.age = age;
+        this.birthDate = birthDate;
     }
 }
