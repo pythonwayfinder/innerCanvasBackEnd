@@ -1,5 +1,6 @@
 package com.example.wayfinderai.service;
 
+import com.example.wayfinderai.DTOs.DoodleDto;
 import com.example.wayfinderai.entity.Doodle;
 import com.example.wayfinderai.repository.DoodleRepository;
 import jakarta.transaction.Transactional;
@@ -22,5 +23,13 @@ public class DoodleService {
         doodle.setCnnPrediction(cnnPrediction);
 
         return doodleRepository.save(doodle); // 저장 후 doodle_id 포함된 Entity 반환
+    }
+
+    public DoodleDto getDoodle(Integer doodleId) {
+        Doodle doodle = doodleRepository.findByDoodleId(doodleId).orElseThrow(
+                () -> new RuntimeException("해당 번호의 두들을 찾을 수 없습니다.")
+        );
+
+        return new DoodleDto(doodle);
     }
 }
