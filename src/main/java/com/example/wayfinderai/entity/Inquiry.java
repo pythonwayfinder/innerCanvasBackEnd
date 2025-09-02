@@ -14,7 +14,9 @@ public class Inquiry {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String username;  // 문의자 아이디 (ex. 로그인한 유저 이메일)
+    @ManyToOne
+    @JoinColumn(name="member_username", referencedColumnName = "username")
+    private Member member;  // 문의자 아이디 (ex. 로그인한 유저 이메일)
 
     private String title;
 
