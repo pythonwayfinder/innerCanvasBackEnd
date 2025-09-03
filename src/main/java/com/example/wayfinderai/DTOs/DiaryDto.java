@@ -24,7 +24,6 @@ public class DiaryDto {
     public DiaryDto(Diary diary) {
         this.diaryId = diary.getDiaryId();
         this.member = diary.getMember();
-        this.doodleId = diary.getDoodleId();
         this.diaryText = diary.getDiaryText();
         this.moodColor = diary.getMoodColor();
         this.createdAt = diary.getCreatedAt();

@@ -1,6 +1,7 @@
 package com.example.wayfinderai.controller;
 
 import com.example.wayfinderai.DTOs.DoodleDto;
+import com.example.wayfinderai.entity.Diary;
 import com.example.wayfinderai.entity.Doodle;
 import com.example.wayfinderai.service.DoodleService;
 import lombok.RequiredArgsConstructor;
@@ -35,9 +36,10 @@ public class DoodleController {
         file.transferTo(path.toFile());
 
         String imageUrl = uploadPath + filename;
+        Diary diary = new Diary();
 
         // 2️⃣ DB 저장
-        Doodle saved = doodleService.saveDoodle(userId, imageUrl, null);
+        Doodle saved = doodleService.saveDoodle(diary, imageUrl, null);
 
         // 3️⃣ 응답
         return Map.of("doodleId", saved.getDoodleId(), "imageUrl", saved.getImageUrl());

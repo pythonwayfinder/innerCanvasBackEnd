@@ -29,7 +29,6 @@ public class DiaryService {
         diary.setMember(diaryDto.getMember());
         diary.setDiaryText(diaryDto.getDiaryText());
         diary.setMoodColor(diaryDto.getMoodColor());
-        diary.setDoodleId(diaryDto.getDoodleId());
 
         Diary saved = diaryRepository.save(diary);
         return new DiaryDto(saved);

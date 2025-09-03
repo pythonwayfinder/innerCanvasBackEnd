@@ -1,6 +1,7 @@
 package com.example.wayfinderai.service;
 
 import com.example.wayfinderai.DTOs.DoodleDto;
+import com.example.wayfinderai.entity.Diary;
 import com.example.wayfinderai.entity.Doodle;
 import com.example.wayfinderai.repository.DoodleRepository;
 import jakarta.transaction.Transactional;
@@ -15,10 +16,10 @@ public class DoodleService {
     }
 
     @Transactional
-    public Doodle saveDoodle(Integer userId, String imageUrl, String cnnPrediction) {
+    public Doodle saveDoodle(Diary diary, String imageUrl, String cnnPrediction) {
 
         Doodle doodle = new Doodle();
-        doodle.setUserId(userId);
+        doodle.setDiary(diary);
         doodle.setImageUrl(imageUrl);
         doodle.setCnnPrediction(cnnPrediction);
 
