@@ -8,12 +8,12 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 public class DiaryPostDto {
-    private String userName;
+    private String username;
     private String diaryText;
     private String moodColor;
 
     public DiaryPostDto(String userName, String diaryText, String moodColor) {
-        this.userName = userName;
+        this.username = userName;
         this.diaryText = diaryText;
         this.moodColor = moodColor;
     }
