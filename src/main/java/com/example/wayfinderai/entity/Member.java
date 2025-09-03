@@ -7,10 +7,10 @@ import java.time.LocalDate;
 
 @Entity
 @Data
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@NoArgsConstructor
 @AllArgsConstructor
 @ToString
-
+@Builder
 public class Member {
 
     @Id

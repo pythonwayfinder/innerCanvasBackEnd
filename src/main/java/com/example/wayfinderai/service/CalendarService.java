@@ -1,4 +1,4 @@
-package com.example.wayfinderai.security.service;
+package com.example.wayfinderai.service;
 
 import com.example.wayfinderai.DTOs.CalendarResponseDto;
 import com.example.wayfinderai.entity.CalendarEntity;

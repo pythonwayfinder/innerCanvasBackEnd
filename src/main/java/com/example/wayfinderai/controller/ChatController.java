@@ -6,6 +6,8 @@ import com.example.wayfinderai.service.AnalysisService;
 import com.example.wayfinderai.service.ChatService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -24,7 +26,7 @@ public class ChatController {
     }
 
     @PostMapping
-    public ChatDto saveChat(@RequestBody ChatDto chatDto) {
+    public ChatDto saveChat(@AuthenticationPrincipal UserDetails userDetails, @RequestBody ChatDto chatDto) {
         return chatService.createChat(chatDto);
     }
 

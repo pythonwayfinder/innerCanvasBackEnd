@@ -19,4 +19,5 @@ public interface ChatRepository extends JpaRepository<Chat, Integer> {
     // 특정 날짜 이후의 모든 채팅 기록을 시간순으로 정렬하여 찾아옵니다.
     List<Chat> findByMemberAndCreatedAtAfterOrderByCreatedAtAsc(Member member, LocalDateTime startDate);
 
+    List<Chat> findByDiary_DiaryIdOrderByCreatedAtAsc(Integer diaryId);
 }

@@ -8,4 +8,6 @@ import java.util.List;
 
 public interface InquiryRepository extends JpaRepository<Inquiry, Long> {
     List<Inquiry> findByMemberOrderByIdDesc(Member member);
+
+    List<Inquiry> findAllByOrderByStatusAscCreatedAtDesc();
 }

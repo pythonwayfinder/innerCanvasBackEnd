@@ -45,4 +45,6 @@ public class UsersController {
     public ResponseEntity<Boolean> changePass(@RequestBody LoginRequestDto loginRequestDto, HttpServletResponse response) {
         return ResponseEntity.ok(memberService.checkPassword(loginRequestDto, response));
     }
+
+
 }

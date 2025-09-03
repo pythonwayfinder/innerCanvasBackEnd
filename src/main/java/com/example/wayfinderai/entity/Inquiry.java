@@ -1,13 +1,22 @@
 package com.example.wayfinderai.entity;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.DynamicUpdate;
+
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "inquiries")
 @Data
+@DynamicUpdate
 @NoArgsConstructor
+@Builder
+@AllArgsConstructor
 public class Inquiry {
 
     @Id
@@ -24,12 +33,18 @@ public class Inquiry {
     private String answer;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "member_id", nullable = false) // FK
+    @JoinColumn(name="member_username", referencedColumnName = "username", nullable = false) // FK
     private Member member;
 
-    public Inquiry(Member member, String title, String content) {
-        this.member = member;
-        this.title = title;
-        this.content = content;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private InquiryStatus status = InquiryStatus.PENDING; // 기본 상태를 'PENDING'으로 설정
+
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    public enum InquiryStatus {
+        PENDING, // 답변 대기
+        ANSWERED // 답변 완료
     }
 }
