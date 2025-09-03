@@ -1,6 +1,7 @@
 package com.example.wayfinderai.DTOs;
 
 import com.example.wayfinderai.entity.Diary;
+import com.example.wayfinderai.entity.Member;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -14,7 +15,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class DiaryDto {
     private Long diaryId;
-    private Long userId;
+    private Member member;
     private Long doodleId;
     private String diaryText;
     private String moodColor;
@@ -22,7 +23,7 @@ public class DiaryDto {
 
     public DiaryDto(Diary diary) {
         this.diaryId = diary.getDiaryId();
-        this.userId = diary.getUserId();
+        this.member = diary.getMember();
         this.doodleId = diary.getDoodleId();
         this.diaryText = diary.getDiaryText();
         this.moodColor = diary.getMoodColor();

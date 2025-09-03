@@ -20,7 +20,7 @@ public class Chat {
     @Column(name = "log_id")
     private Integer chatId;
 
-    @Column(name = "diary_d", nullable = false)
+    @Column(name = "diary_id", nullable = false)
     private Integer diaryId;
 
     @Column(name = "sender", length = 50)

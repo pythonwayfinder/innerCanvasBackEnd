@@ -16,11 +16,11 @@ public class DiaryController {
 
     @GetMapping
     public DiaryDto getDiary(
-            @RequestParam Long userId,
+            @RequestParam String username,
             @RequestParam String date
     ) {
         LocalDate localDate = LocalDate.parse(date); // "2025-08-28"
-        return diaryService.getDiaryByDate(userId, localDate);
+        return diaryService.getDiaryByDate(username, localDate);
     }
 
     @PostMapping

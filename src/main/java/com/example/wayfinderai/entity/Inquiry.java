@@ -14,19 +14,21 @@ public class Inquiry {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String username;  // 문의자 아이디 (ex. 로그인한 유저 이메일)
-
+    @Column(columnDefinition = "TEXT")
     private String title;
 
     @Column(columnDefinition = "TEXT")
     private String content;
 
     @Column(columnDefinition = "TEXT")
-    private String answer; // 답변 내용 (없을 수도 있음)
+    private String answer;
 
-    // 생성자 편의 생성
-    public Inquiry(String username, String title, String content) {
-        this.username = username;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "member_id", nullable = false) // FK
+    private Member member;
+
+    public Inquiry(Member member, String title, String content) {
+        this.member = member;
         this.title = title;
         this.content = content;
     }

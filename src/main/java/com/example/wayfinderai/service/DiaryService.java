@@ -14,11 +14,11 @@ import java.time.LocalDateTime;
 public class DiaryService {
     private final DiaryRepository diaryRepository;
 
-    public DiaryDto getDiaryByDate(Long userId, LocalDate date) {
+    public DiaryDto getDiaryByDate(String username, LocalDate date) {
         LocalDateTime start = date.atStartOfDay();
         LocalDateTime end = date.plusDays(1).atStartOfDay().minusSeconds(1);
 
-        Diary diary = diaryRepository.findByUserIdAndCreatedAtBetween(userId, start, end)
+        Diary diary = diaryRepository.findByMemberUsernameAndCreatedAtBetween(username, start, end)
                 .orElseThrow(() -> new RuntimeException("해당 날짜의 일기를 찾을 수 없습니다."));
 
         return new DiaryDto(diary);
@@ -26,7 +26,7 @@ public class DiaryService {
 
     public DiaryDto createDiary(DiaryDto diaryDto) {
         Diary diary = new Diary();
-        diary.setUserId(diaryDto.getUserId());
+        diary.setMember(diaryDto.getMember());
         diary.setDiaryText(diaryDto.getDiaryText());
         diary.setMoodColor(diaryDto.getMoodColor());
         diary.setDoodleId(diaryDto.getDoodleId());

@@ -18,8 +18,9 @@ public class Diary {
     @Column(name = "diary_id")
     private Long diaryId;
 
-    @Column(name = "user_id", nullable = false)
-    private Long userId; // 추후 User 엔티티 연관관계로 변경 가능
+    @ManyToOne
+    @JoinColumn(name="member_username", referencedColumnName = "username")
+    private Member member;
 
     @Column(name = "doodle_id")
     private Long doodleId; // 추후 Doodle 엔티티 연관관계로 변경 가능
