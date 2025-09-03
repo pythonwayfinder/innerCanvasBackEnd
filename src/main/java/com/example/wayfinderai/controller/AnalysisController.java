@@ -38,13 +38,13 @@ public class AnalysisController {
         }
 
          //--- 2-1, 2-2, 3, 4, 5. FastAPI 호출 및 LLM 응답 처리 로직 (Service 계층에서 처리) ---
-         String counselingResult = analysisService.requestAnalysisToFastAPI(file, diaryText, username);
+//         String counselingResult = analysisService.requestAnalysisToFastAPI(file, diaryText, username);
 
         // 아래는 로직이 구현되었다고 가정한 임시 응답 데이터입니다.
-//        String counselingResult = "AI가 사용자의 일기와 그림을 분석한 결과입니다. "
-//                + "오늘은 전반적으로 긍정적인 감정이 느껴지네요. "
-//                + "그림에서는 자유로운 선의 사용이 인상적입니다. "
-//                + "이러한 감정을 계속 이어나가시면 좋겠습니다.";
+        String counselingResult = "AI가 사용자의 일기와 그림을 분석한 결과입니다. "
+                + "오늘은 전반적으로 긍정적인 감정이 느껴지네요. "
+                + "그림에서는 자유로운 선의 사용이 인상적입니다. "
+                + "이러한 감정을 계속 이어나가시면 좋겠습니다.";
 
 
         // --- 6. Spring이 응답을 DTO에 담아 React로 보냄 ---

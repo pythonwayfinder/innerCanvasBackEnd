@@ -61,7 +61,7 @@ public class SecurityConfig {
 
                 // ✨ 2. 그 외 더 넓은 범위의 규칙을 나중에 작성합니다.
                 .requestMatchers("/api/auth/**").permitAll()
-                .requestMatchers("/api/doodles/**", "/api/diary/**", "/api/chat/**").permitAll()
+                .requestMatchers("/api/doodles/**", "/api/diary/**", "/api/chat/**", "/api/diary-with-doodle/**").permitAll()
                 .requestMatchers("/", "/index.html", "/script.js", "/main/**").permitAll()
                 .anyRequest().authenticated()
         );

@@ -19,7 +19,6 @@ import java.util.List;
 public class ChatController {
     private final ChatService chatService;
 
-
     @GetMapping
     public List<ChatDto> getChats(@RequestParam Long diaryId) {
         return chatService.getChatByDiaryId(diaryId);

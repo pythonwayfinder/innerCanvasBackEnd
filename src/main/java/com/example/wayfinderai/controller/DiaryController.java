@@ -1,7 +1,9 @@
 package com.example.wayfinderai.controller;
 
 import com.example.wayfinderai.DTOs.DiaryDto;
+import com.example.wayfinderai.DTOs.DiaryPostDto;
 import com.example.wayfinderai.service.DiaryService;
+import com.example.wayfinderai.service.MemberService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,7 +26,7 @@ public class DiaryController {
     }
 
     @PostMapping
-    public DiaryDto createDiary(@RequestBody DiaryDto diaryDto) {
+    public DiaryDto createDiary(@RequestBody DiaryPostDto diaryDto) {
         return diaryService.createDiary(diaryDto);
     }
 }

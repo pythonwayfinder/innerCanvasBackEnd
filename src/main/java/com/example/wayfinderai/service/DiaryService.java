@@ -1,18 +1,23 @@
 package com.example.wayfinderai.service;
 
 import com.example.wayfinderai.DTOs.DiaryDto;
+import com.example.wayfinderai.DTOs.DiaryPostDto;
 import com.example.wayfinderai.entity.Diary;
+import com.example.wayfinderai.entity.Member;
+import com.example.wayfinderai.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import com.example.wayfinderai.repository.DiaryRepository;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 public class DiaryService {
     private final DiaryRepository diaryRepository;
+    private final MemberRepository memberRepository;
 
     public DiaryDto getDiaryByDate(String username, LocalDate date) {
         LocalDateTime start = date.atStartOfDay();
@@ -24,11 +29,16 @@ public class DiaryService {
         return new DiaryDto(diary);
     }
 
-    public DiaryDto createDiary(DiaryDto diaryDto) {
-        Diary diary = new Diary();
-        diary.setMember(diaryDto.getMember());
-        diary.setDiaryText(diaryDto.getDiaryText());
-        diary.setMoodColor(diaryDto.getMoodColor());
+    public DiaryDto createDiary(DiaryPostDto diaryDto) {
+        Member member = memberRepository.findByUsername(diaryDto.getUserName())
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
+
+        Diary diary = Diary.builder()
+                .member(member)
+                .diaryText(diaryDto.getDiaryText())
+                .moodColor(diaryDto.getMoodColor())
+                .createdAt(LocalDateTime.now())
+                .build();
 
         Diary saved = diaryRepository.save(diary);
         return new DiaryDto(saved);

@@ -27,7 +27,7 @@ public class DoodleController {
     @PostMapping
     public Map<String, Object> uploadDoodle(
             @RequestParam("file") MultipartFile file,
-            @RequestParam("userId") Integer userId) throws IOException {
+            @RequestParam("diaryId") Long diaryId) throws IOException {
 
         // 1️⃣ 파일 서버에 저장
         String filename = System.currentTimeMillis() + "_" + file.getOriginalFilename();
@@ -36,10 +36,9 @@ public class DoodleController {
         file.transferTo(path.toFile());
 
         String imageUrl = uploadPath + filename;
-        Diary diary = new Diary();
 
         // 2️⃣ DB 저장
-        Doodle saved = doodleService.saveDoodle(diary, imageUrl, null);
+        Doodle saved = doodleService.saveDoodle(diaryId, imageUrl, null);
 
         // 3️⃣ 응답
         return Map.of("doodleId", saved.getDoodleId(), "imageUrl", saved.getImageUrl());

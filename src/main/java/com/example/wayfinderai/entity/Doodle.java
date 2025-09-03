@@ -1,14 +1,16 @@
 package com.example.wayfinderai.entity;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "doodles")
 @Getter @Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Doodle {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

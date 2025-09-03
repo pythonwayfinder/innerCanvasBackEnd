@@ -3,25 +3,29 @@ package com.example.wayfinderai.service;
 import com.example.wayfinderai.DTOs.DoodleDto;
 import com.example.wayfinderai.entity.Diary;
 import com.example.wayfinderai.entity.Doodle;
+import com.example.wayfinderai.repository.DiaryRepository;
 import com.example.wayfinderai.repository.DoodleRepository;
 import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class DoodleService {
     private final DoodleRepository doodleRepository;
-
-    public DoodleService(DoodleRepository doodleRepository) {
-        this.doodleRepository = doodleRepository;
-    }
+    private final DiaryRepository diaryRepository;
 
     @Transactional
-    public Doodle saveDoodle(Diary diary, String imageUrl, String cnnPrediction) {
+    public Doodle saveDoodle(Long diaryId, String imageUrl, String cnnPrediction) {
 
-        Doodle doodle = new Doodle();
-        doodle.setDiary(diary);
-        doodle.setImageUrl(imageUrl);
-        doodle.setCnnPrediction(cnnPrediction);
+        Diary diary = diaryRepository.findByDiaryId(diaryId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 다이어리입니다."));
+
+        Doodle doodle = Doodle.builder()
+                .diary(diary)
+                .imageUrl(imageUrl)
+                .cnnPrediction("") // 필요 시 초기값
+                .build();
 
         return doodleRepository.save(doodle); // 저장 후 doodle_id 포함된 Entity 반환
     }
