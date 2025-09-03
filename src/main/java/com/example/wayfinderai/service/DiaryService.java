@@ -30,7 +30,7 @@ public class DiaryService {
     }
 
     public DiaryDto createDiary(DiaryPostDto diaryDto) {
-        Member member = memberRepository.findByUsername(diaryDto.getUserName())
+        Member member = memberRepository.findByUsername(diaryDto.getUsername())
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
 
         Diary diary = Diary.builder()

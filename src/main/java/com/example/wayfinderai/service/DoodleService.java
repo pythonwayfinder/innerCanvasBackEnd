@@ -9,6 +9,8 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+
 @Service
 @RequiredArgsConstructor
 public class DoodleService {
@@ -25,6 +27,7 @@ public class DoodleService {
                 .diary(diary)
                 .imageUrl(imageUrl)
                 .cnnPrediction("") // 필요 시 초기값
+                .createdAt(LocalDateTime.now())
                 .build();
 
         return doodleRepository.save(doodle); // 저장 후 doodle_id 포함된 Entity 반환
