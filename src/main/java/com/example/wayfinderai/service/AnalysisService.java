@@ -1,12 +1,16 @@
 package com.example.wayfinderai.service; // 패키지명은 실제 프로젝트에 맞게 수정해주세요.
 
  // 과거 기록을 가져오는 서비스
+import com.example.wayfinderai.DTOs.ChatResponseDto;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.MultipartBodyBuilder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
+
+import java.util.Map;
 
 @Service
 public class AnalysisService {
@@ -62,5 +66,11 @@ public class AnalysisService {
                 .block();
 
         return response;
+    }
+
+    public ChatResponseDto processChatMessage(UserDetails userDetails, Map<String, Object> requestBody) {
+
+
+        return null;
     }
 }

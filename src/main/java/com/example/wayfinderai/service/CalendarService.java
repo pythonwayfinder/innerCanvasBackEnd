@@ -1,7 +1,7 @@
 package com.example.wayfinderai.service;
 
 import com.example.wayfinderai.DTOs.CalendarResponseDto;
-import com.example.wayfinderai.entity.CalendarEntity;
+import com.example.wayfinderai.entity.Calendar;
 import com.example.wayfinderai.repository.CalendarRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -21,10 +21,10 @@ public class CalendarService {
         String yearMonth = year + "-" + formattedMonth; // ex) "2025-08"
 
         // DB에서 해당 년-월로 시작하는 날짜 리스트 조회
-        List<CalendarEntity> entities = calendarRepository.findByDateStartingWith(yearMonth);
+        List<Calendar> entities = calendarRepository.findByDateStartingWith(yearMonth);
 
         List<CalendarResponseDto> moodList = new ArrayList<>();
-        for (CalendarEntity entity : entities) {
+        for (Calendar entity : entities) {
             moodList.add(new CalendarResponseDto(entity.getDate(), entity.getMonth()));
         }
         return moodList;

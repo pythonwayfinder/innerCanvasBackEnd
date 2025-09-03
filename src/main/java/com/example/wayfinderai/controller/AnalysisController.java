@@ -2,6 +2,7 @@ package com.example.wayfinderai.controller;
 
 import com.example.wayfinderai.DTOs.AiCounselingResponseDto;
 import com.example.wayfinderai.DTOs.ChatDto;
+import com.example.wayfinderai.DTOs.ChatResponseDto;
 import com.example.wayfinderai.service.AnalysisService;
 import com.example.wayfinderai.service.ChatService;
 import lombok.RequiredArgsConstructor;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/analysis")
@@ -46,9 +48,24 @@ public class AnalysisController {
                 + "그림에서는 자유로운 선의 사용이 인상적입니다. "
                 + "이러한 감정을 계속 이어나가시면 좋겠습니다.";
 
-
         // --- 6. Spring이 응답을 DTO에 담아 React로 보냄 ---
         AiCounselingResponseDto responseDto = new AiCounselingResponseDto(counselingResult);
         return ResponseEntity.ok(responseDto);
     }
+
+    /**
+     * [창구 2: 후속 채팅] - ✨ 여기가 핵심입니다.
+     * @param userDetails (선택) 로그인한 사용자의 정보. 비회원은 null.
+     * @param requestBody React가 보낸 JSON 본문 전체를 Map으로 받습니다.
+     */
+    @PostMapping("/chat")
+    public ResponseEntity<ChatResponseDto> handleChatMessage(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestBody Map<String, Object> requestBody) { // DTO 대신 Map 사용
+
+        // AnalysisService에 Map을 그대로 전달하여 처리를 위임합니다.
+        ChatResponseDto aiResponse = analysisService.processChatMessage(userDetails, requestBody);
+        return ResponseEntity.ok(aiResponse);
+    }
+
 }

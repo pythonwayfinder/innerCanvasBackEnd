@@ -6,7 +6,7 @@ import lombok.Getter;
 
 @Entity
 @Getter
-public class CalendarEntity {
+public class Calendar {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -18,11 +18,11 @@ public class CalendarEntity {
     @Column(length = 200)
     private String month;
 
-    public CalendarEntity() {
+    public Calendar() {
 
     }
 
-    public CalendarEntity(String date, String month) {
+    public Calendar(String date, String month) {
         this.date = date;
         this.month = month;
     }

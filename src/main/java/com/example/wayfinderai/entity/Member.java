@@ -38,7 +38,6 @@ public class Member {
 
     @Column(name = "birth_day_date")
     private LocalDate birthDate;
-
     // 어느 소셜 로그인을 통해 가입했는지 확인 (예: "google", "local")
     @Column
     private String provider;
