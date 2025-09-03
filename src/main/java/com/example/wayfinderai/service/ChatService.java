@@ -14,8 +14,8 @@ public class ChatService {
     private final ChatRepository chatRepository;
 
 
-    public List<ChatDto> getChatByDiaryId(Integer diaryId) {
-        List<Chat> chats = chatRepository.findByDiaryId(diaryId);
+    public List<ChatDto> getChatByDiaryId(Long diaryId) {
+        List<Chat> chats = chatRepository.findByDiaryDiaryId(diaryId);
 
         return chats.stream()
                 .map(ChatDto::new)
@@ -24,7 +24,7 @@ public class ChatService {
 
     public ChatDto createChat(ChatDto chatDto) {
         Chat chat = new Chat();
-        chat.setDiaryId(chatDto.getDiaryId());
+        chat.setDiary(chatDto.getDiary());
         chat.setMessage(chatDto.getMessage());
         chat.setSender(chatDto.getSender());
         chat.setCreatedAt(chatDto.getCreatedAt());

@@ -1,6 +1,7 @@
 package com.example.wayfinderai.DTOs;
 
 import com.example.wayfinderai.entity.Chat;
+import com.example.wayfinderai.entity.Diary;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -14,14 +15,14 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class ChatDto {
     private Integer chatId;
-    private Integer diaryId;
+    private Diary diary;
     private String sender;
     private String message;
     private LocalDateTime createdAt;
 
     public ChatDto(Chat chat) {
         this.chatId = chat.getChatId();
-        this.diaryId = chat.getDiaryId();
+        this.diary = chat.getDiary();
         this.sender = chat.getSender();
         this.message = chat.getMessage();
         this.createdAt = chat.getCreatedAt();

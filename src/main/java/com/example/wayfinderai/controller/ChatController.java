@@ -19,7 +19,7 @@ public class ChatController {
 
 
     @GetMapping
-    public List<ChatDto> getChats(@RequestParam Integer diaryId) {
+    public List<ChatDto> getChats(@RequestParam Long diaryId) {
         return chatService.getChatByDiaryId(diaryId);
     }
 
