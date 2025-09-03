@@ -23,6 +23,10 @@ public class Chat {
     @Column(name = "diary_id", nullable = false)
     private Integer diaryId;
 
+    @ManyToOne
+    @JoinColumn(name="member_username", referencedColumnName = "username")
+    private Member member;
+
     @Column(name = "sender", length = 50)
     private String sender;
 

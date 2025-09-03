@@ -1,5 +1,6 @@
-package com.example.wayfinderai.service;
+package com.example.wayfinderai.service; // 패키지명은 실제 프로젝트에 맞게 수정해주세요.
 
+ // 과거 기록을 가져오는 서비스
 import org.springframework.http.MediaType;
 import org.springframework.http.client.MultipartBodyBuilder;
 import org.springframework.stereotype.Service;
@@ -11,30 +12,55 @@ import org.springframework.web.reactive.function.client.WebClient;
 public class AnalysisService {
 
     private final WebClient webClient;
+    private final PastLogService pastLogService; // DB에서 과거 기록을 조회하는 서비스 주입
 
-    // 2단계에서 설정한 WebClient를 주입받음
-    public AnalysisService(WebClient fastapiWebClient) {
+    // WebClient와 함께 PastLogService를 주입받도록 생성자 수정
+    public AnalysisService(WebClient fastapiWebClient, PastLogService pastLogService) {
         this.webClient = fastapiWebClient;
+        this.pastLogService = pastLogService;
     }
 
-    public String analyzeDiary(MultipartFile imageFile) {
+    /**
+     * 이미지, 텍스트, 사용자 ID를 받아 FastAPI 서버로 분석을 요청합니다.
+     * @param imageFile (선택) 사용자가 업로드한 두들 이미지
+     * @param text 사용자가 작성한 일기 텍스트
+     * @param username (선택) 현재 로그인한 사용자의 ID
+     * @return FastAPI 서버로부터 받은 분석 결과 (JSON 문자열)
+     */
+    public String requestAnalysisToFastAPI(MultipartFile imageFile, String text, String username) {
 
-        // 1. MultipartBodyBuilder를 사용하여 'multipart/form-data' 요청 본문을 생성
+        String pastLogsJson = null;
+
+        // --- (핵심 수정) 서비스 내부에서 직접 과거 기록 조회 ---
+        // userId가 존재할 경우 (로그인한 회원일 경우) PastLogService를 호출
+        if (username != null && !username.isEmpty()) {
+            pastLogsJson = pastLogService.getPastLogsAsJson(username);
+        }
+
         MultipartBodyBuilder bodyBuilder = new MultipartBodyBuilder();
 
-        // 2. 'file'이라는 이름(key)으로 이미지 파일을 추가.
-        // 이 'file'은 FastAPI 엔드포인트의 `file: UploadFile = File(...)` 부분의 변수 이름과 일치해야 함.
-        bodyBuilder.part("file", imageFile.getResource());
+        // 항상 존재하는 'text' 파트 추가
+        bodyBuilder.part("text", text);
 
-        // 3. WebClient를 사용하여 FastAPI 서버에 POST 요청 전송
-        String response = webClient.post()           // POST 요청
-                .uri("/analyze_diary/")          // 목적지 경로
-                .contentType(MediaType.MULTIPART_FORM_DATA) // 데이터 타입은 multipart
-                .body(BodyInserters.fromMultipartData(bodyBuilder.build())) // 1, 2번에서 만든 요청 본문 삽입
-                .retrieve()                       // 응답을 받기 시작
-                .bodyToMono(String.class)         // 응답 본문을 String 형태로 변환
-                .block();                         // 비동기 작업이 끝날 때까지 기다림
+        // 이미지 파일이 있을 경우에만 'file' 파트를 추가
+        if (imageFile != null && !imageFile.isEmpty()) {
+            bodyBuilder.part("file", imageFile.getResource());
+        }
 
-        return response; // FastAPI로부터 받은 JSON 응답을 그대로 반환
+//        // 조회된 과거 기록이 있을 경우에만 'past_logs_json' 파트를 추가
+//        if (pastLogsJson != null && !pastLogsJson.isEmpty()) {
+//            bodyBuilder.part("past_logs_json", pastLogsJson);
+//        }
+
+        // WebClient를 사용하여 FastAPI 서버에 POST 요청 전송
+        String response = webClient.post()
+                .uri("/analyze/diary/")
+                .contentType(MediaType.MULTIPART_FORM_DATA)
+                .body(BodyInserters.fromMultipartData(bodyBuilder.build()))
+                .retrieve()
+                .bodyToMono(String.class)
+                .block();
+
+        return response;
     }
 }

@@ -22,9 +22,6 @@ public class Diary {
     @JoinColumn(name="member_username", referencedColumnName = "username")
     private Member member;
 
-    @Column(name = "doodle_id")
-    private Long doodleId; // 추후 Doodle 엔티티 연관관계로 변경 가능
-
     @Column(name = "diary_text", columnDefinition = "TEXT")
     private String diaryText;
 
