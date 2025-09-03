@@ -13,6 +13,7 @@ import java.util.List;
 public class ChatService {
     private final ChatRepository chatRepository;
 
+
     public List<ChatDto> getChatByDiaryId(Integer diaryId) {
         List<Chat> chats = chatRepository.findByDiaryId(diaryId);
 
