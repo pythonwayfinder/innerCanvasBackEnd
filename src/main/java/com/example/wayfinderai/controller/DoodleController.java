@@ -23,7 +23,6 @@ public class DoodleController {
     @Value("${upload.path}")
     private String uploadPath;
 
-
     @PostMapping
     public Map<String, Object> uploadDoodle(
             @RequestParam("file") MultipartFile file,
