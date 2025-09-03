@@ -20,8 +20,9 @@ public class Chat {
     @Column(name = "log_id")
     private Integer chatId;
 
-    @Column(name = "diary_id", nullable = false)
-    private Integer diaryId;
+    @ManyToOne
+    @JoinColumn(name = "diary_id", referencedColumnName = "diary_id", nullable = false)
+    private Diary diary;
 
     @ManyToOne
     @JoinColumn(name="member_username", referencedColumnName = "username")
