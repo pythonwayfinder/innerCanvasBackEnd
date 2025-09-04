@@ -5,6 +5,7 @@ import com.example.wayfinderai.entity.Diary;
 import com.example.wayfinderai.entity.Member;
 import com.example.wayfinderai.repository.ChatRepository;
 import com.example.wayfinderai.repository.DiaryRepository;
+import com.example.wayfinderai.repository.MemberRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
@@ -29,17 +30,23 @@ public class AnalysisService {
     private final PastLogService pastLogService;
     private final DiaryRepository diaryRepository;
     private final ChatRepository chatRepository;
+    private final MemberRepository memberRepository;
 
     // =================================================================
     // 역할 1: 최초 분석 요청 처리
     // =================================================================
-    public String requestInitialAnalysis(Long diaryId, MultipartFile imageFile, String text, String username) {
+    @Transactional
+    public String requestInitialAnalysis(String diaryId, MultipartFile imageFile, String text, UserDetails userDetails) {
+        Long diaryIdtoLong = Long.parseLong(diaryId);
         MultipartBodyBuilder bodyBuilder = new MultipartBodyBuilder();
         bodyBuilder.part("text", text);
         if (imageFile != null && !imageFile.isEmpty()) {
             bodyBuilder.part("file", imageFile.getResource());
         }
-
+        String username = null;
+        if (userDetails != null) {
+            username = userDetails.getUsername();
+        }
         // 회원의 경우, 지난 7일간의 채팅 기록을 함께 보내 RAG에 활용합니다.
         if (username != null && !username.isEmpty()) {
             String pastLogsJson = pastLogService.getPastLogsAsJson(username);
@@ -55,9 +62,11 @@ public class AnalysisService {
                 .retrieve()
                 .bodyToMono(Map.class) // String 대신 Map으로 받도록 변경
                 .block();
-
         String aiConselingText = response != null ? response.get("counseling_response") : "분석 결과를 받지 못했습니다.";
-        saveChatMessage(diaryId, username, "ai", aiConselingText);
+        System.out.println(aiConselingText);
+        if (username != null && !username.isEmpty()) {
+            saveChatMessage(diaryIdtoLong, username, "ai", aiConselingText);
+        }
         // Map에서 "message" 키를 가진 값을 추출하여 반환합니다.
         return response != null ? response.get("counseling_response") : "분석 결과를 받지 못했습니다.";
     }
@@ -137,12 +146,22 @@ public class AnalysisService {
     }
 
     private void saveChatMessage(Long diaryId, String userName, String sender, String message) {
+        // 1. ID로 '진짜' Diary 객체를 DB에서 조회합니다.
+        Diary diary = diaryRepository.findById(diaryId)
+                .orElseThrow(() -> new EntityNotFoundException("해당 Diary를 찾을 수 없습니다: " + diaryId));
+
+        // 2. userName으로 '진짜' Member 객체를 DB에서 조회합니다.
+        // (MemberRepository에 findByUsername 메서드가 있어야 합니다)
+        Member member = memberRepository.findByUsername(userName)
+                .orElseThrow(() -> new EntityNotFoundException("해당 Member를 찾을 수 없습니다: " + userName));
+
+        // 3. 조회한 '진짜' 객체들을 사용하여 Chat 객체를 생성합니다.
         Chat chat = Chat.builder()
-                .diary(Diary.builder().diaryId(diaryId).build())
-                .member(Member.builder().username(userName).build())
+                .diary(diary)     // 👈 조회한 Diary 객체 사용
+                .member(member)   // 👈 조회한 Member 객체 사용
                 .sender(sender)
                 .message(message)
                 .build();
-        chatRepository.save(chat);
+        chatRepository.save(chat); // 이제 정상적으로 저장됩니다.
     }
 }

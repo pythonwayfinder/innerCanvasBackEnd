@@ -62,6 +62,7 @@ public class DiaryService {
                 .build();
 
         Diary saved = diaryRepository.save(diary);
+        System.out.println(saved.getDiaryId());
         return new DiaryDto(saved);
     }
 }

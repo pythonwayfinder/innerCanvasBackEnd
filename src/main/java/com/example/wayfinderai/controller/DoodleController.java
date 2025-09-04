@@ -54,10 +54,10 @@ public class DoodleController {
 
     @GetMapping("/img/download")
     public FileSystemResource fileDownload(@RequestParam("filename") String fileName, HttpServletResponse response) {
-        System.out.println("arrive?");
+//        System.out.println("arrive?");
         File file = new File(uploadPath + "/" + fileName);
-        System.out.println(file.getName());
-        System.out.println(file.getAbsolutePath());
+//        System.out.println(file.getName());
+//        System.out.println(file.getAbsolutePath());
         response.setContentType("application/download; utf-8");
         response.setHeader("Content-Disposition", "attachment; filename=" + fileName);
         return new FileSystemResource(file);

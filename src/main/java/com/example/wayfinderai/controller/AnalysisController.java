@@ -24,14 +24,10 @@ public class AnalysisController {
 
     @PostMapping("/ai")
     public ResponseEntity<AiCounselingResponseDto> getAiCounseling(@AuthenticationPrincipal UserDetails userDetails,
-            @RequestParam("diaryId") Long diaryId,
+            @RequestParam("diaryId") String diaryId,
             @RequestParam(value = "file", required = false) MultipartFile file,
             @RequestParam("diaryText") String diaryText) {
         // ---1. username 가져오기
-        String username = null;
-        if (userDetails != null) {
-            username = userDetails.getUsername();
-        }
 
         // --- 2. Spring이 React로부터 이미지와 텍스트를 받음 ---
         System.out.println("Received Diary Text: " + diaryText);
@@ -41,7 +37,7 @@ public class AnalysisController {
         }
 
          //--- 2-1, 2-2, 3, 4, 5. FastAPI 호출 및 LLM 응답 처리 로직 (Service 계층에서 처리) ---
-        String counselingResult = analysisService.requestInitialAnalysis(diaryId ,file, diaryText, username);
+        String counselingResult = analysisService.requestInitialAnalysis(diaryId ,file, diaryText, userDetails);
         System.out.println(counselingResult);
         // 아래는 로직이 구현되었다고 가정한 임시 응답 데이터입니다.
 //        String counselingResult = "AI가 사용자의 일기와 그림을 분석한 결과입니다. "
