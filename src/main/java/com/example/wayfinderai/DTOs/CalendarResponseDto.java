@@ -5,10 +5,10 @@ import lombok.Getter;
 @Getter
 public class CalendarResponseDto {
     private String date;
-    private String month;
+    private String moodColor;
 
-    public CalendarResponseDto(String date, String month) {
+    public CalendarResponseDto(String date, String moodColor) {
         this.date = date;
-        this.month = month;
+        this.moodColor = moodColor;
     }
 }
