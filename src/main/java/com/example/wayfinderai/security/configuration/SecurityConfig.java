@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -58,14 +59,30 @@ public class SecurityConfig {
                 // ✨ 1. 더 구체적인 규칙을 먼저 작성합니다.
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 .requestMatchers("/api/auth/me").authenticated() // '/api/auth/me'는 반드시 인증이 필요함
-
                 // ✨ 2. 그 외 더 넓은 범위의 규칙을 나중에 작성합니다.
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/api/analysis/**").permitAll()
-                .requestMatchers("/api/doodles/**", "/api/diary/**", "/api/chat/**", "/api/diary-with-doodle/**").permitAll()
-                .requestMatchers("/", "/index.html", "/script.js", "/main/**").permitAll()
+//                .requestMatchers("/api/doodles/**", "/api/diary/**", "/api/chat/**", "/api/diary-with-doodle/**").permitAll()
+                .requestMatchers("/", "/index.html", "/script.js", "/main/**", "/api/img/**").permitAll()
                 .anyRequest().authenticated()
         );
+
+        http.exceptionHandling(exception -> exception
+                // 인증되지 않은 사용자가 보호된 리소스에 접근하려고 할 때의 동작을 정의합니다.
+                // 이 규칙은 permitAll() 경로라도, 인증 정보가 잘못되었을 때를 대비해 항상 적용될 수 있습니다.
+                .authenticationEntryPoint((request, response, authException) -> {
+                    // 이 요청이 API 요청인지 확인합니다 (React의 axios는 'X-Requested-With' 헤더를 보냅니다).
+                    boolean isAjax = "XMLHttpRequest".equals(request.getHeader("X-Requested-With"));
+                    if (isAjax) {
+                        // API 요청일 경우, 절대 리디렉션하지 않고 401 Unauthorized 에러를 응답합니다.
+                        response.setStatus(HttpStatus.UNAUTHORIZED.value());
+                    } else {
+                        // API 요청이 아닌 일반적인 브라우저 페이지 이동일 경우에만 로그인 페이지로 리디렉션합니다.
+                        response.sendRedirect("/login");
+                    }
+                })
+        );
+
 
         // OAuth2 로그인 설정 추가
         http.oauth2Login(oauth2 -> oauth2

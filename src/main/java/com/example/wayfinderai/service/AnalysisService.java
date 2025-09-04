@@ -1,6 +1,5 @@
 package com.example.wayfinderai.service;
 
-import com.example.wayfinderai.DTOs.AiCounselingResponseDto;
 import com.example.wayfinderai.entity.Chat;
 import com.example.wayfinderai.entity.Diary;
 import com.example.wayfinderai.entity.Member;
@@ -34,7 +33,7 @@ public class AnalysisService {
     // =================================================================
     // 역할 1: 최초 분석 요청 처리
     // =================================================================
-    public String requestInitialAnalysis(MultipartFile imageFile, String text, String username) {
+    public String requestInitialAnalysis(Long diaryId, MultipartFile imageFile, String text, String username) {
         MultipartBodyBuilder bodyBuilder = new MultipartBodyBuilder();
         bodyBuilder.part("text", text);
         if (imageFile != null && !imageFile.isEmpty()) {
@@ -48,7 +47,6 @@ public class AnalysisService {
                 bodyBuilder.part("past_logs_json", pastLogsJson);
             }
         }
-
         // FastAPI의 최초 분석 엔드포인트로 요청을 보냅니다.
         Map<String, String> response = fastapiWebClient.post()
                 .uri("/analyze/diary/")
@@ -58,6 +56,8 @@ public class AnalysisService {
                 .bodyToMono(Map.class) // String 대신 Map으로 받도록 변경
                 .block();
 
+        String aiConselingText = response != null ? response.get("counseling_response") : "분석 결과를 받지 못했습니다.";
+        saveChatMessage(diaryId, username, "ai", aiConselingText);
         // Map에서 "message" 키를 가진 값을 추출하여 반환합니다.
         return response != null ? response.get("counseling_response") : "분석 결과를 받지 못했습니다.";
     }
