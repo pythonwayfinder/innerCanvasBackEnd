@@ -40,8 +40,8 @@ public class AnalysisController {
         }
 
          //--- 2-1, 2-2, 3, 4, 5. FastAPI 호출 및 LLM 응답 처리 로직 (Service 계층에서 처리) ---
-         String counselingResult = analysisService.requestInitialAnalysis(file, diaryText, username);
-
+        String counselingResult = analysisService.requestInitialAnalysis(file, diaryText, username);
+        System.out.println(counselingResult);
         // 아래는 로직이 구현되었다고 가정한 임시 응답 데이터입니다.
 //        String counselingResult = "AI가 사용자의 일기와 그림을 분석한 결과입니다. "
 //                + "오늘은 전반적으로 긍정적인 감정이 느껴지네요. "
@@ -62,9 +62,10 @@ public class AnalysisController {
     public ResponseEntity<AiCounselingResponseDto> handleChatMessage(
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestBody Map<String, Object> requestBody) { // DTO 대신 Map 사용
-
+        System.out.println("Received Chat Message: " + requestBody);
         // AnalysisService에 Map을 그대로 전달하여 처리를 위임합니다.
-        String aiResponse = analysisService.processChatMessage(userDetails, requestBody);
+//        String aiResponse = analysisService.processChatMessage(userDetails, requestBody);
+        String aiResponse = "답변 1";
 
         AiCounselingResponseDto responseDto = new AiCounselingResponseDto(aiResponse);
 

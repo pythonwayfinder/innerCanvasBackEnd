@@ -59,7 +59,7 @@ public class AnalysisService {
                 .block();
 
         // Map에서 "message" 키를 가진 값을 추출하여 반환합니다.
-        return response != null ? response.get("message") : "분석 결과를 받지 못했습니다.";
+        return response != null ? response.get("counseling_response") : "분석 결과를 받지 못했습니다.";
     }
 
     // =================================================================
