@@ -1,32 +1,46 @@
 package com.example.wayfinderai.service;
 
 import com.example.wayfinderai.DTOs.CalendarResponseDto;
-import com.example.wayfinderai.entity.Calendar;
-import com.example.wayfinderai.repository.CalendarRepository;
+import com.example.wayfinderai.entity.Diary;
+import com.example.wayfinderai.repository.DiaryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 @Service
-@RequiredArgsConstructor  // lombok으로 생성자 자동 생성
+@RequiredArgsConstructor
 public class CalendarService {
 
-    private final CalendarRepository calendarRepository;
+    private final DiaryRepository diaryRepository;
 
     public List<CalendarResponseDto> getMoodData(String year, String month) {
-        // month가 1자리 숫자면 앞에 0 붙이기 (예: 8 -> 08)
+        // 한 자리 월에 0 붙이기 (예: 9 -> 09)
         String formattedMonth = month.length() == 1 ? "0" + month : month;
-        String yearMonth = year + "-" + formattedMonth; // ex) "2025-08"
 
-        // DB에서 해당 년-월로 시작하는 날짜 리스트 조회
-        List<Calendar> entities = calendarRepository.findByDateStartingWith(yearMonth);
+        // 월의 시작일과 마지막일 계산
+        LocalDate startDate = LocalDate.parse(year + "-" + formattedMonth + "-01");
+        LocalDate endDate = startDate.withDayOfMonth(startDate.lengthOfMonth());
 
+        // LocalDateTime으로 변환 (시작은 자정, 끝은 23:59:59)
+        LocalDateTime startDateTime = startDate.atStartOfDay();
+        LocalDateTime endDateTime = endDate.atTime(23, 59, 59);
+
+        // 해당 기간 사이의 Diary 데이터 조회
+        List<Diary> diaries = diaryRepository.findByCreatedAtBetween(startDateTime, endDateTime);
+
+        // DTO로 변환
         List<CalendarResponseDto> moodList = new ArrayList<>();
-        for (Calendar entity : entities) {
-            moodList.add(new CalendarResponseDto(entity.getDate(), entity.getMonth()));
+        for (Diary diary : diaries) {
+            moodList.add(new CalendarResponseDto(
+                    diary.getCreatedAt().toLocalDate().toString(),
+                    diary.getMoodColor()
+            ));
         }
+
         return moodList;
     }
 }
