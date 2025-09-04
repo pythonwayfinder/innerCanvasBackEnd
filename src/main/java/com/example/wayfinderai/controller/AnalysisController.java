@@ -61,8 +61,8 @@ public class AnalysisController {
             @RequestBody Map<String, Object> requestBody) { // DTO 대신 Map 사용
         System.out.println("Received Chat Message: " + requestBody);
         // AnalysisService에 Map을 그대로 전달하여 처리를 위임합니다.
-//        String aiResponse = analysisService.processChatMessage(userDetails, requestBody);
-        String aiResponse = "답변 1";
+        String aiResponse = analysisService.processChatMessage(userDetails, requestBody);
+//        String aiResponse = "답변 1";
 
         AiCounselingResponseDto responseDto = new AiCounselingResponseDto(aiResponse);
 

@@ -82,44 +82,40 @@ public class AnalysisService {
         if (userDetails != null) {
             // --- ✨ 회원 로직 ---
             String username = userDetails.getUsername();
-            Long diaryId = (Long) requestBody.get("diaryId");
+            Long diaryId = Long.parseLong(requestBody.get("diaryId").toString());
             String message = (String) requestBody.get("message");
 
             // 1. 사용자의 새 메시지를 DB에 저장합니다.
             saveChatMessage(diaryId, username, "user", message);
 
             // 2. RAG를 위한 모든 컨텍스트(자료)를 수집합니다.
-            Diary diary = diaryRepository.findById(diaryId)
-                    .orElseThrow(() -> new EntityNotFoundException("해당 일기를 찾을 수 없습니다: " + diaryId));
+//            Diary diary = diaryRepository.findById(diaryId)
+//                    .orElseThrow(() -> new EntityNotFoundException("해당 일기를 찾을 수 없습니다: " + diaryId));
 
             // 2-1. [현재 대화 기록]을 DB에서 조회합니다.
-            List<Chat> currentChatHistory = chatRepository.findByDiary_DiaryIdOrderByCreatedAtAsc(diaryId);
+//            List<Chat> currentChatHistory = chatRepository.findByDiary_DiaryIdOrderByCreatedAtAsc(diaryId);
 
             // 2-2. [과거 7일치 모든 대화 기록]을 PastLogService를 통해 조회합니다.
             String past7DaysHistoryJson = pastLogService.getPastLogsAsJson(username);
 
-            payloadToFastApi.put("currentChatHistory", currentChatHistory); // 현재 대화 기록
+            payloadToFastApi.put("message", message);
+            payloadToFastApi.put("currentChatHistory", requestBody.get("pastMessages")); // 현재 대화 기록
             payloadToFastApi.put("past7DaysHistory", past7DaysHistoryJson); // 과거 7일치 모든 대화
 
-            return "이건 ai 답변";
+//            return "이건 ai 답변";
+            // 4. 완성된 payload를 FastAPI로 전송합니다.
+            aiMessageText = callFastApiForChat(payloadToFastApi);
 
-//            // 4. 완성된 payload를 FastAPI로 전송합니다.
-//            aiMessageText = callFastApiForChat(payloadToFastApi);
-//
-//            // 5. AI의 답변도 DB에 저장합니다.
-//            saveChatMessage(diaryId, username, "ai", aiMessageText);
+            // 5. AI의 답변도 DB에 저장합니다.
+            saveChatMessage(diaryId, username, "ai", aiMessageText);
 
         } else {
             // --- ✨ 비회원 로직 ---
             // 1. React가 보내준 현재 대화 기록을 FastAPI로 그대로 전달합니다.
-            return "이건 ai 답변";
-
-//            aiMessageText = callFastApiWithGuestPayload(requestBody);
+//            return "이건 ai 답변";
+            aiMessageText = callFastApiWithGuestPayload(requestBody);
         }
-
-
-
-//        return aiMessageText;
+        return aiMessageText;
     }
 
     // =================================================================
