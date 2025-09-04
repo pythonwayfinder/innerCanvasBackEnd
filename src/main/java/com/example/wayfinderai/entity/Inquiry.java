@@ -40,7 +40,7 @@ public class Inquiry {
     @Column(nullable = false)
     private InquiryStatus status = InquiryStatus.PENDING; // 기본 상태를 'PENDING'으로 설정
 
-    @Column(nullable = false, updatable = false)
+    @Column(nullable = false, updatable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     private LocalDateTime createdAt;
 
     public enum InquiryStatus {

@@ -64,8 +64,11 @@ public class AnalysisController {
             @RequestBody Map<String, Object> requestBody) { // DTO 대신 Map 사용
 
         // AnalysisService에 Map을 그대로 전달하여 처리를 위임합니다.
-        AiCounselingResponseDto aiResponse = analysisService.processChatMessage(userDetails, requestBody);
-        return ResponseEntity.ok(aiResponse);
+        String aiResponse = analysisService.processChatMessage(userDetails, requestBody);
+
+        AiCounselingResponseDto responseDto = new AiCounselingResponseDto(aiResponse);
+
+        return ResponseEntity.ok(responseDto);
     }
 
 }

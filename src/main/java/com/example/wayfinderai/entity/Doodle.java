@@ -27,6 +27,6 @@ public class Doodle {
     @Column(name = "cnn_prediction", length = 50)
     private String cnnPrediction;
 
-    @Column(name = "created_at", nullable = false)
+    @Column(name = "created_at", nullable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     private LocalDateTime createdAt = LocalDateTime.now();
 }
