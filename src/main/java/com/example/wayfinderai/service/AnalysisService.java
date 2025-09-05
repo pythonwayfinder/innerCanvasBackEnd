@@ -19,7 +19,6 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 @Service
@@ -55,20 +54,26 @@ public class AnalysisService {
             }
         }
         // FastAPI의 최초 분석 엔드포인트로 요청을 보냅니다.
-        Map<String, String> response = fastapiWebClient.post()
+        Map<String, Object> response = fastapiWebClient.post()
                 .uri("/analyze/diary/")
                 .contentType(MediaType.MULTIPART_FORM_DATA)
                 .body(BodyInserters.fromMultipartData(bodyBuilder.build()))
                 .retrieve()
                 .bodyToMono(Map.class) // String 대신 Map으로 받도록 변경
                 .block();
-        String aiConselingText = response != null ? response.get("counseling_response") : "분석 결과를 받지 못했습니다.";
-        System.out.println(aiConselingText);
+        System.out.println(response);
+
+        String aiConselingText = response != null ? response.get("counseling_response").toString() : "분석 결과를 받지 못했습니다.";
+        String emotion_type = response.get("main_emotion").toString();
+        System.out.println(emotion_type);
+
+
+//        System.out.println(aiConselingText);
         if (username != null && !username.isEmpty()) {
-            saveChatMessage(diaryIdtoLong, username, "ai", aiConselingText);
+            saveChatMessage(diaryIdtoLong, username, "ai", aiConselingText, emotion_type);
         }
         // Map에서 "message" 키를 가진 값을 추출하여 반환합니다.
-        return response != null ? response.get("counseling_response") : "분석 결과를 받지 못했습니다.";
+        return response != null ? response.get("counseling_response").toString() : "분석 결과를 받지 못했습니다.";
     }
 
     // =================================================================
@@ -86,7 +91,7 @@ public class AnalysisService {
             String message = (String) requestBody.get("message");
 
             // 1. 사용자의 새 메시지를 DB에 저장합니다.
-            saveChatMessage(diaryId, username, "user", message);
+            saveChatMessage(diaryId, username, "user", message, null);
 
             // 2. RAG를 위한 모든 컨텍스트(자료)를 수집합니다.
 //            Diary diary = diaryRepository.findById(diaryId)
@@ -107,7 +112,7 @@ public class AnalysisService {
             aiMessageText = callFastApiForChat(payloadToFastApi);
 
             // 5. AI의 답변도 DB에 저장합니다.
-            saveChatMessage(diaryId, username, "ai", aiMessageText);
+            saveChatMessage(diaryId, username, "ai", aiMessageText, null);
 
         } else {
             // --- ✨ 비회원 로직 ---
@@ -141,11 +146,12 @@ public class AnalysisService {
         return response != null ? response.get("message") : "응답을 받지 못했습니다.";
     }
 
-    private void saveChatMessage(Long diaryId, String userName, String sender, String message) {
+    private void saveChatMessage(Long diaryId, String userName, String sender, String message, String emotion_type) {
         // 1. ID로 '진짜' Diary 객체를 DB에서 조회합니다.
         Diary diary = diaryRepository.findById(diaryId)
                 .orElseThrow(() -> new EntityNotFoundException("해당 Diary를 찾을 수 없습니다: " + diaryId));
-
+        diary.setMoodColor(emotion_type);
+        diaryRepository.save(diary);
         // 2. userName으로 '진짜' Member 객체를 DB에서 조회합니다.
         // (MemberRepository에 findByUsername 메서드가 있어야 합니다)
         Member member = memberRepository.findByUsername(userName)
