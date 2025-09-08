@@ -39,6 +39,9 @@ public class AnalysisService {
         Long diaryIdtoLong = Long.parseLong(diaryId);
         MultipartBodyBuilder bodyBuilder = new MultipartBodyBuilder();
         bodyBuilder.part("text", text);
+
+        bodyBuilder.part("diaryId", diaryIdtoLong);  // ✅ diaryId 추가
+
         if (imageFile != null && !imageFile.isEmpty()) {
             bodyBuilder.part("file", imageFile.getResource());
         }
@@ -48,10 +51,14 @@ public class AnalysisService {
         }
         // 회원의 경우, 지난 7일간의 채팅 기록을 함께 보내 RAG에 활용합니다.
         if (username != null && !username.isEmpty()) {
+            bodyBuilder.part("username", username);
             String pastLogsJson = pastLogService.getPastLogsAsJson(username);
             if (pastLogsJson != null && !pastLogsJson.isEmpty()) {
                 bodyBuilder.part("past_logs_json", pastLogsJson);
             }
+        }
+        else {
+            bodyBuilder.part("username", "");
         }
         // FastAPI의 최초 분석 엔드포인트로 요청을 보냅니다.
         Map<String, Object> response = fastapiWebClient.post()
@@ -89,6 +96,7 @@ public class AnalysisService {
             String username = userDetails.getUsername();
             Long diaryId = Long.parseLong(requestBody.get("diaryId").toString());
             String message = (String) requestBody.get("message");
+            System.out.println("회원 로직을 실행합니다.");
 
             // 1. 사용자의 새 메시지를 DB에 저장합니다.
             saveChatMessage(diaryId, username, "user", message, null);
@@ -103,9 +111,12 @@ public class AnalysisService {
             // 2-2. [과거 7일치 모든 대화 기록]을 PastLogService를 통해 조회합니다.
             String past7DaysHistoryJson = pastLogService.getPastLogsAsJson(username);
 
+            // 임시로 currentChatHistory와 past7DaysHistory 비활성화
             payloadToFastApi.put("message", message);
-            payloadToFastApi.put("currentChatHistory", requestBody.get("pastMessages")); // 현재 대화 기록
-            payloadToFastApi.put("past7DaysHistory", past7DaysHistoryJson); // 과거 7일치 모든 대화
+            payloadToFastApi.put("username", username);
+            //payloadToFastApi.put("currentChatHistory", requestBody.get("pastMessages")); // 현재 대화 기록
+            payloadToFastApi.put("currentChatHistory", null);
+            payloadToFastApi.put("past7DaysHistory", ""); // 과거 7일치 모든 대화
 
 //            return "이건 ai 답변";
             // 4. 완성된 payload를 FastAPI로 전송합니다.
@@ -118,6 +129,7 @@ public class AnalysisService {
             // --- ✨ 비회원 로직 ---
             // 1. React가 보내준 현재 대화 기록을 FastAPI로 그대로 전달합니다.
 //            return "이건 ai 답변";
+            System.out.println("비-회원 로직을 실행합니다.");
             aiMessageText = callFastApiWithGuestPayload(requestBody);
         }
         return aiMessageText;
@@ -126,7 +138,7 @@ public class AnalysisService {
     // =================================================================
     // 비공개 헬퍼 메서드 (내부 로직)
     // =================================================================
-
+    @SuppressWarnings("Unchecked")
     private String callFastApiForChat(Map<String, Object> payload) {
         // 이제 모든 채팅 관련 FastAPI 응답은 { "message": "..." } JSON 형식이라고 가정합니다.
         Map<String, String> response = fastapiWebClient.post()
@@ -138,6 +150,7 @@ public class AnalysisService {
         return response != null ? response.get("message") : "응답을 받지 못했습니다.";
     }
 
+    @SuppressWarnings("Unchecked")
     private String callFastApiWithGuestPayload(Map<String, Object> payload) {
         Map<String, String> response = fastapiWebClient.post()
                 .uri("/analyze/chat/guest")
