@@ -150,7 +150,9 @@ public class AnalysisService {
         // 1. ID로 '진짜' Diary 객체를 DB에서 조회합니다.
         Diary diary = diaryRepository.findById(diaryId)
                 .orElseThrow(() -> new EntityNotFoundException("해당 Diary를 찾을 수 없습니다: " + diaryId));
-        diary.setMoodColor(emotion_type);
+        if(emotion_type != null && !emotion_type.isEmpty()) {
+            diary.setMoodColor(emotion_type);
+        }
         diaryRepository.save(diary);
         // 2. userName으로 '진짜' Member 객체를 DB에서 조회합니다.
         // (MemberRepository에 findByUsername 메서드가 있어야 합니다)
