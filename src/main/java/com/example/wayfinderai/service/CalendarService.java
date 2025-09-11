@@ -17,7 +17,8 @@ public class CalendarService {
 
     private final DiaryRepository diaryRepository;
 
-    public List<CalendarResponseDto> getMoodData(String year, String month) {
+    // ✅ 1. 메서드 시그니처에 username 파라미터 추가
+    public List<CalendarResponseDto> getMoodData(String year, String month, String username) {
         // 한 자리 월에 0 붙이기 (예: 9 -> 09)
         String formattedMonth = month.length() == 1 ? "0" + month : month;
 
@@ -29,8 +30,8 @@ public class CalendarService {
         LocalDateTime startDateTime = startDate.atStartOfDay();
         LocalDateTime endDateTime = endDate.atTime(23, 59, 59);
 
-        // 해당 기간 사이의 Diary 데이터 조회
-        List<Diary> diaries = diaryRepository.findByCreatedAtBetween(startDateTime, endDateTime);
+        // ✅ 2. username을 포함하여 다이어리 데이터 조회
+        List<Diary> diaries = diaryRepository.findByMember_UsernameAndCreatedAtBetween(username, startDateTime, endDateTime);
 
         // DTO로 변환
         List<CalendarResponseDto> moodList = new ArrayList<>();

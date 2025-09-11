@@ -22,6 +22,7 @@ public interface DiaryRepository extends JpaRepository<Diary, Long> {
     List<Diary> findAllByMemberUsername(String username);
 
     // 캘린더 로직
-    List<Diary> findByCreatedAtBetween(LocalDateTime startDateTime, LocalDateTime endDateTime);
-    }
+    List<Diary> findByMember_UsernameAndCreatedAtBetween(String username, LocalDateTime startDateTime, LocalDateTime endDateTime);
+}
+
 

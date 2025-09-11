@@ -2,13 +2,11 @@ package com.example.wayfinderai.controller;
 
 
 import com.example.wayfinderai.DTOs.CalendarResponseDto;
+import com.example.wayfinderai.DTOs.MoodRequestDto;
 import com.example.wayfinderai.service.CalendarService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -19,14 +17,18 @@ public class CalendarController {
 
     private final CalendarService moodService;
 
-
-    @GetMapping("/{year}/{month}")
-    public ResponseEntity<List<CalendarResponseDto>> getMoodData(
+    @PostMapping("/{year}/{month}")
+    public ResponseEntity<List<CalendarResponseDto>> postMoodData(
             @PathVariable String year,
-            @PathVariable String month) {
-        System.out.println(year);
-        System.out.println(month);
-        List<CalendarResponseDto> moodList = moodService.getMoodData(year, month);
+            @PathVariable String month,
+            @RequestBody MoodRequestDto requestDto) { // 2. @RequestBody로 username 받기
+
+        System.out.println("Year: " + year);
+        System.out.println("Month: " + month);
+        System.out.println("Username: " + requestDto.getUsername()); // 3. username 확인
+
+        // 4. 서비스 호출 시 username 전달
+        List<CalendarResponseDto> moodList = moodService.getMoodData(year, month, requestDto.getUsername());
         return ResponseEntity.ok(moodList);
     }
 }
