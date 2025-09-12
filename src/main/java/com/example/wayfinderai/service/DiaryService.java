@@ -1,6 +1,7 @@
 package com.example.wayfinderai.service;
 
 import com.example.wayfinderai.DTOs.ChatDto;
+import com.example.wayfinderai.DTOs.ChatResponseDto;
 import com.example.wayfinderai.DTOs.DiaryDto;
 import com.example.wayfinderai.DTOs.DiaryPostDto;
 import com.example.wayfinderai.entity.Diary;
@@ -34,7 +35,7 @@ public class DiaryService {
         if (diaryOptional.isPresent()) {
             Diary diary = diaryOptional.get();
             Optional<Doodle> doodleOptional = doodleRepository.findByDiary_DiaryId(diary.getDiaryId());
-            List<ChatDto> chatDtos = chatService.getChatByDiaryId(diary.getDiaryId());
+            List<ChatResponseDto> chatDtos = chatService.getChatByDiaryId(diary.getDiaryId());
             return DiaryDto.builder()
                     .diaryId(diary.getDiaryId())
                     .diaryText(diary.getDiaryText())

@@ -19,7 +19,7 @@ public class DiaryDto {
     private String diaryText;
     private String moodColor;
     private LocalDateTime createdAt;
-    private List<ChatDto> chatDtos;
+    private List<ChatResponseDto> chatDtos;
 
     public DiaryDto(Diary diary) {
         this.diaryId = diary.getDiaryId();

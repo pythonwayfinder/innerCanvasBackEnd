@@ -1,5 +1,8 @@
 package com.example.wayfinderai.service;
 
+import com.example.wayfinderai.DTOs.GuestChatRequestDto;
+import com.example.wayfinderai.DTOs.InitialAnalysisResponseDto;
+import com.example.wayfinderai.DTOs.MemberChatRequestDto;
 import com.example.wayfinderai.entity.Chat;
 import com.example.wayfinderai.entity.Diary;
 import com.example.wayfinderai.entity.Member;
@@ -16,9 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Mono;
 
-import java.util.HashMap;
 import java.util.Map;
 
 @Service
@@ -26,159 +27,114 @@ import java.util.Map;
 public class AnalysisService {
 
     private final WebClient fastapiWebClient;
-    private final PastLogService pastLogService;
     private final DiaryRepository diaryRepository;
     private final ChatRepository chatRepository;
     private final MemberRepository memberRepository;
 
-    // =================================================================
-    // 역할 1: 최초 분석 요청 처리
-    // =================================================================
+    // FastAPI에 일기 최초 분석을 요청하고, 결과를 받아 DB에 첫 AI 메시지를 저장합니다.
     @Transactional
-    public String requestInitialAnalysis(String diaryId, MultipartFile imageFile, String text, UserDetails userDetails) {
-        Long diaryIdtoLong = Long.parseLong(diaryId);
+    public InitialAnalysisResponseDto requestInitialAnalysis(Long diaryId, MultipartFile imageFile, String text, UserDetails userDetails) {
         MultipartBodyBuilder bodyBuilder = new MultipartBodyBuilder();
+        bodyBuilder.part("diary_id", diaryId);
         bodyBuilder.part("text", text);
-
-        bodyBuilder.part("diaryId", diaryIdtoLong);  // ✅ diaryId 추가
-
         if (imageFile != null && !imageFile.isEmpty()) {
             bodyBuilder.part("file", imageFile.getResource());
         }
-        String username = null;
-        if (userDetails != null) {
-            username = userDetails.getUsername();
-        }
-        // 회원의 경우, 지난 7일간의 채팅 기록을 함께 보내 RAG에 활용합니다.
-        if (username != null && !username.isEmpty()) {
+
+        String username = (userDetails != null) ? userDetails.getUsername() : null;
+        if (username != null) {
             bodyBuilder.part("username", username);
-            String pastLogsJson = pastLogService.getPastLogsAsJson(username);
-            if (pastLogsJson != null && !pastLogsJson.isEmpty()) {
-                bodyBuilder.part("past_logs_json", pastLogsJson);
-            }
         }
-        else {
-            bodyBuilder.part("username", "");
-        }
-        // FastAPI의 최초 분석 엔드포인트로 요청을 보냅니다.
-        Map<String, Object> response = fastapiWebClient.post()
+
+        // FastAPI의 /analyze/diary/ 엔드포인트로 요청
+        InitialAnalysisResponseDto response = fastapiWebClient.post()
                 .uri("/analyze/diary/")
                 .contentType(MediaType.MULTIPART_FORM_DATA)
                 .body(BodyInserters.fromMultipartData(bodyBuilder.build()))
                 .retrieve()
-                .bodyToMono(Map.class) // String 대신 Map으로 받도록 변경
+                .bodyToMono(InitialAnalysisResponseDto.class)
                 .block();
-        System.out.println(response);
 
-        String aiConselingText = response != null ? response.get("counseling_response").toString() : "분석 결과를 받지 못했습니다.";
-        String emotion_type = response.get("main_emotion").toString();
-        System.out.println(emotion_type);
-
-
-//        System.out.println(aiConselingText);
-        if (username != null && !username.isEmpty()) {
-            saveChatMessage(diaryIdtoLong, username, "ai", aiConselingText, emotion_type);
+        if (response == null) {
+            throw new RuntimeException("FastAPI로부터 분석 결과를 받지 못했습니다.");
         }
-        // Map에서 "message" 키를 가진 값을 추출하여 반환합니다.
-        return response != null ? response.get("counseling_response").toString() : "분석 결과를 받지 못했습니다.";
+
+        // 회원인 경우, AI의 첫 답변과 감정 분석 결과를 DB에 저장
+        if (username != null) {
+            saveChatMessage(diaryId, username, "ai", response.getCounselingResponse(), response.getMainEmotion());
+        }
+
+        return response;
     }
 
-    // =================================================================
-    // 역할 2: 후속 채팅 메시지 처리 (RAG)
-    // =================================================================
+    // 사용자의 후속 채팅 메시지를 처리합니다. (회원/비회원 분기 처리)
     @Transactional
     public String processChatMessage(UserDetails userDetails, Map<String, Object> requestBody) {
-        String aiMessageText;
-        Map<String, Object> payloadToFastApi = new HashMap<>(requestBody); // React가 보낸 데이터를 기반으로 payload 생성
-
         if (userDetails != null) {
-            // --- ✨ 회원 로직 ---
-            String username = userDetails.getUsername();
-            Long diaryId = Long.parseLong(requestBody.get("diaryId").toString());
-            String message = (String) requestBody.get("message");
-            System.out.println("회원 로직을 실행합니다.");
-
-            // 1. 사용자의 새 메시지를 DB에 저장합니다.
-            saveChatMessage(diaryId, username, "user", message, null);
-
-            // 2. RAG를 위한 모든 컨텍스트(자료)를 수집합니다.
-//            Diary diary = diaryRepository.findById(diaryId)
-//                    .orElseThrow(() -> new EntityNotFoundException("해당 일기를 찾을 수 없습니다: " + diaryId));
-
-            // 2-1. [현재 대화 기록]을 DB에서 조회합니다.
-//            List<Chat> currentChatHistory = chatRepository.findByDiary_DiaryIdOrderByCreatedAtAsc(diaryId);
-
-            // 2-2. [과거 7일치 모든 대화 기록]을 PastLogService를 통해 조회합니다.
-            String past7DaysHistoryJson = pastLogService.getPastLogsAsJson(username);
-
-            // 임시로 currentChatHistory와 past7DaysHistory 비활성화
-            payloadToFastApi.put("message", message);
-            payloadToFastApi.put("username", username);
-            //payloadToFastApi.put("currentChatHistory", requestBody.get("pastMessages")); // 현재 대화 기록
-            payloadToFastApi.put("currentChatHistory", null);
-            payloadToFastApi.put("past7DaysHistory", ""); // 과거 7일치 모든 대화
-
-//            return "이건 ai 답변";
-            // 4. 완성된 payload를 FastAPI로 전송합니다.
-            aiMessageText = callFastApiForChat(payloadToFastApi);
-
-            // 5. AI의 답변도 DB에 저장합니다.
-            saveChatMessage(diaryId, username, "ai", aiMessageText, null);
-
+            return processMemberChat(userDetails.getUsername(), requestBody);
         } else {
-            // --- ✨ 비회원 로직 ---
-            // 1. React가 보내준 현재 대화 기록을 FastAPI로 그대로 전달합니다.
-//            return "이건 ai 답변";
-            System.out.println("비-회원 로직을 실행합니다.");
-            aiMessageText = callFastApiWithGuestPayload(requestBody);
+            return processGuestChat(requestBody);
         }
-        return aiMessageText;
     }
 
-    // =================================================================
-    // 비공개 헬퍼 메서드 (내부 로직)
-    // =================================================================
-    @SuppressWarnings("Unchecked")
-    private String callFastApiForChat(Map<String, Object> payload) {
-        // 이제 모든 채팅 관련 FastAPI 응답은 { "message": "..." } JSON 형식이라고 가정합니다.
+    // 회원의 채팅 메시지를 FastAPI로 보내고, 유저와 AI의 대화를 DB에 저장합니다.
+    private String processMemberChat(String username, Map<String, Object> requestBody) {
+        Long diaryId = Long.parseLong(requestBody.get("diaryId").toString());
+        String userMessage = (String) requestBody.get("message");
+
+        saveChatMessage(diaryId, username, "user", userMessage, null);
+
+        MemberChatRequestDto payload = new MemberChatRequestDto(diaryId, username, userMessage);
+        String aiMessage = callFastApi("/analyze/chat", payload, MemberChatRequestDto.class);
+
+        saveChatMessage(diaryId, username, "ai", aiMessage, null);
+        return aiMessage;
+    }
+
+    // 비회원의 채팅 메시지를 FastAPI로 보내 답변을 받습니다. (DB 저장 없음)
+    private String processGuestChat(Map<String, Object> requestBody) {
+        String tempUsername = (String) requestBody.get("temp_username");
+        String userMessage = (String) requestBody.get("message");
+
+        GuestChatRequestDto payload = new GuestChatRequestDto(tempUsername, userMessage);
+        return callFastApi("/analyze/chat/guest", payload, GuestChatRequestDto.class);
+    }
+
+    // FastAPI 채팅 API를 호출하는 공통 메서드입니다.
+    @SuppressWarnings("unchecked")
+    private <T> String callFastApi(String uri, T payload, Class<T> payloadType) {
         Map<String, String> response = fastapiWebClient.post()
-                .uri("/analyze/chat") // FastAPI의 통합 채팅 엔드포인트
-                .body(Mono.just(payload), Map.class)
+                .uri(uri)
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(payload)
                 .retrieve()
                 .bodyToMono(Map.class)
                 .block();
-        return response != null ? response.get("message") : "응답을 받지 못했습니다.";
+
+        if (response == null || response.get("message") == null) {
+            return "응답을 받지 못했습니다.";
+        }
+        return response.get("message");
     }
 
-    @SuppressWarnings("Unchecked")
-    private String callFastApiWithGuestPayload(Map<String, Object> payload) {
-        Map<String, String> response = fastapiWebClient.post()
-                .uri("/analyze/chat/guest")
-                .body(Mono.just(payload), Map.class)
-                .retrieve().bodyToMono(Map.class).block();
-        return response != null ? response.get("message") : "응답을 받지 못했습니다.";
-    }
-
-    private void saveChatMessage(Long diaryId, String userName, String sender, String message, String emotion_type) {
-        // 1. ID로 '진짜' Diary 객체를 DB에서 조회합니다.
+    // 채팅 메시지를 DB에 저장하고, 필요한 경우 다이어리의 감정 색상을 업데이트합니다.
+    private void saveChatMessage(Long diaryId, String userName, String sender, String message, String emotionType) {
         Diary diary = diaryRepository.findById(diaryId)
                 .orElseThrow(() -> new EntityNotFoundException("해당 Diary를 찾을 수 없습니다: " + diaryId));
-        if(emotion_type != null && !emotion_type.isEmpty()) {
-            diary.setMoodColor(emotion_type);
+
+        if (emotionType != null && !emotionType.isEmpty()) {
+            diary.setMoodColor(emotionType);
         }
-        diaryRepository.save(diary);
-        // 2. userName으로 '진짜' Member 객체를 DB에서 조회합니다.
-        // (MemberRepository에 findByUsername 메서드가 있어야 합니다)
+
         Member member = memberRepository.findByUsername(userName)
                 .orElseThrow(() -> new EntityNotFoundException("해당 Member를 찾을 수 없습니다: " + userName));
 
-        // 3. 조회한 '진짜' 객체들을 사용하여 Chat 객체를 생성합니다.
         Chat chat = Chat.builder()
-                .diary(diary)     // 👈 조회한 Diary 객체 사용
-                .member(member)   // 👈 조회한 Member 객체 사용
+                .diary(diary)
+                .member(member)
                 .sender(sender)
                 .message(message)
                 .build();
-        chatRepository.save(chat); // 이제 정상적으로 저장됩니다.
+        chatRepository.save(chat);
     }
 }

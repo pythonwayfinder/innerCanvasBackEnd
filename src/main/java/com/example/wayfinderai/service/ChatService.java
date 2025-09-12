@@ -1,6 +1,7 @@
 package com.example.wayfinderai.service;
 
 import com.example.wayfinderai.DTOs.ChatDto;
+import com.example.wayfinderai.DTOs.ChatResponseDto;
 import com.example.wayfinderai.entity.Chat;
 import com.example.wayfinderai.repository.ChatRepository;
 import lombok.RequiredArgsConstructor;
@@ -14,11 +15,11 @@ public class ChatService {
     private final ChatRepository chatRepository;
 
 
-    public List<ChatDto> getChatByDiaryId(Long diaryId) {
+    public List<ChatResponseDto> getChatByDiaryId(Long diaryId) {
         List<Chat> chats = chatRepository.findByDiaryDiaryId(diaryId);
 
         return chats.stream()
-                .map(ChatDto::new)
+                .map(ChatResponseDto::new)
                 .toList();
     }
 

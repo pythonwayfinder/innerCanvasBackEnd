@@ -19,10 +19,10 @@ import java.util.List;
 public class ChatController {
     private final ChatService chatService;
 
-    @GetMapping
-    public List<ChatDto> getChats(@RequestParam Long diaryId) {
-        return chatService.getChatByDiaryId(diaryId);
-    }
+//    @GetMapping
+//    public List<ChatDto> getChats(@RequestParam Long diaryId) {
+//        return chatService.getChatByDiaryId(diaryId);
+//    }
 
     @PostMapping
     public ChatDto saveChat(@AuthenticationPrincipal UserDetails userDetails, @RequestBody ChatDto chatDto) {
